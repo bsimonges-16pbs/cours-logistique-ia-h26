@@ -4,9 +4,10 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle TRS</title>
+<title>Centre de contrôle industriel TRS</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
 
@@ -21,6 +22,25 @@ h1{text-align:center}
 
 .version{
 text-align:right;
+margin-bottom:20px;
+}
+
+.legend{
+background:#1e293b;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;
+}
+
+.alert{
+background:#7f1d1d;
+padding:10px;
+border-radius:6px;
+margin-bottom:20px;
+display:none;
+}
+
+.filters{
 margin-bottom:20px;
 }
 
@@ -60,6 +80,7 @@ th,td{
 padding:8px;
 border-bottom:1px solid #334155;
 text-align:center;
+cursor:pointer;
 }
 
 th{
@@ -67,8 +88,8 @@ background:#1f2937;
 }
 
 button{
-margin:10px 0;
-padding:10px;
+margin:10px;
+padding:10px 15px;
 border:none;
 border-radius:5px;
 background:#2563eb;
@@ -86,9 +107,34 @@ cursor:pointer;
 
 <div class="version">
 
-Version 7.0<br>
+Version 8.0<br>
 Dernière mise à jour :
 <span id="dateUpdate"></span>
+
+</div>
+
+<div id="alertBox" class="alert"></div>
+
+<div class="legend">
+
+<b>Légende KPI</b><br><br>
+
+<span style="color:#ef4444">● Rouge</span> Performance critique<br>
+<span style="color:#f59e0b">● Orange</span> Zone amélioration<br>
+<span style="color:#22c55e">● Vert</span> Objectif atteint
+
+</div>
+
+<div class="filters">
+
+Filtre mois
+<select id="monthFilter"></select>
+
+Filtre semaine
+<select id="weekFilter"></select>
+
+Filtre machine
+<select id="machineFilter"></select>
 
 </div>
 
@@ -115,8 +161,8 @@ Dernière mise à jour :
 </div>
 
 <div class="card">
-<h2 id="trend"></h2>
-<p>Tendance</p>
+<h2>85%</h2>
+<p>Objectif TRS</p>
 </div>
 
 </div>
@@ -126,47 +172,21 @@ Dernière mise à jour :
 <canvas id="trsChart"></canvas>
 </div>
 
-<div class="chart">
-<h2>Disponibilité / Performance / Qualité</h2>
-<canvas id="dpqChart"></canvas>
-</div>
+<h2>Données détaillées</h2>
 
-<div class="chart">
-<h2>TRS par ligne</h2>
-<canvas id="lineChart"></canvas>
-</div>
-
-<div class="chart">
-<h2>TRS par machine</h2>
-<canvas id="machineChart"></canvas>
-</div>
-
-<div class="chart">
-<h2>Pareto des pertes</h2>
-<canvas id="paretoChart"></canvas>
-</div>
-
-<div class="chart">
-<h2>TRS par quart de travail</h2>
-<canvas id="shiftChart"></canvas>
-</div>
-
-<h2>Données détaillées (tableau type Excel)</h2>
-
-<button onclick="exportCSV()">Exporter vers Excel (CSV)</button>
+<button onclick="exportCSV()">Exporter CSV</button>
+<button onclick="exportExcel()">Exporter Excel</button>
 
 <table id="dataTable">
 
 <thead>
-
 <tr>
-<th>Date</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Performance</th>
-<th>Qualité</th>
+<th onclick="sortTable(0)">Date</th>
+<th onclick="sortTable(1)">TRS</th>
+<th onclick="sortTable(2)">Disponibilité</th>
+<th onclick="sortTable(3)">Performance</th>
+<th onclick="sortTable(4)">Qualité</th>
 </tr>
-
 </thead>
 
 <tbody></tbody>
@@ -185,11 +205,11 @@ return Math.random()*(max-min)+min
 const months=["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"]
 
 let data=[]
-let labels=[]
 let trs=[]
 let disp=[]
 let perf=[]
 let qual=[]
+let labels=[]
 
 for(let m=0;m<12;m++){
 
@@ -202,13 +222,6 @@ let qu=random(94,100)
 
 let date=months[m]+"-"+d
 
-labels.push(date)
-
-trs.push(t)
-disp.push(di)
-perf.push(pe)
-qual.push(qu)
-
 data.push({
 date:date,
 trs:t,
@@ -217,27 +230,57 @@ perf:pe,
 qual:qu
 })
 
+labels.push(date)
+
+trs.push(t)
+disp.push(di)
+perf.push(pe)
+qual.push(qu)
+
 }
 
 }
 
 function avg(arr){
-
 return (arr.reduce((a,b)=>a+b)/arr.length).toFixed(1)
+}
+
+function colorKPI(id,value){
+
+let el=document.getElementById(id)
+
+if(value<75) el.style.color="#ef4444"
+else if(value<85) el.style.color="#f59e0b"
+else el.style.color="#22c55e"
 
 }
 
 function updateKPIs(){
 
-document.getElementById("trs").innerText=avg(trs)+"%"
+let t=avg(trs)
+
+document.getElementById("trs").innerText=t+"%"
 document.getElementById("disp").innerText=avg(disp)+"%"
 document.getElementById("perf").innerText=avg(perf)+"%"
 document.getElementById("qual").innerText=avg(qual)+"%"
 
-let trend=trs[trs.length-1]-trs[trs.length-2]
+colorKPI("trs",t)
 
-document.getElementById("trend").innerText=
-trend>0?"⬆":"⬇"
+if(t<75){
+showAlert("⚠ TRS critique sous 75%")
+}
+else if(t<85){
+showAlert("TRS sous objectif")
+}
+
+}
+
+function showAlert(msg){
+
+let box=document.getElementById("alertBox")
+
+box.style.display="block"
+box.innerText=msg
 
 }
 
@@ -249,7 +292,7 @@ let tbody=document.querySelector("#dataTable tbody")
 
 data.forEach(r=>{
 
-let row=`
+tbody.innerHTML+=`
 <tr>
 <td>${r.date}</td>
 <td>${r.trs.toFixed(1)}</td>
@@ -258,8 +301,6 @@ let row=`
 <td>${r.qual.toFixed(1)}</td>
 </tr>
 `
-
-tbody.innerHTML+=row
 
 })
 
@@ -281,92 +322,23 @@ data:trs
 
 })
 
-let dpqChart=new Chart(document.getElementById("dpqChart"),{
+function sortTable(n){
 
-type:"line",
+let table=document.getElementById("dataTable")
+let rows=Array.from(table.rows).slice(1)
 
-data:{
-labels:labels,
-datasets:[
-{label:"Disponibilité",data:disp},
-{label:"Performance",data:perf},
-{label:"Qualité",data:qual}
-]
-}
+rows.sort((a,b)=>{
 
-})
+let A=a.cells[n].innerText
+let B=b.cells[n].innerText
 
-new Chart(document.getElementById("lineChart"),{
-
-type:"bar",
-
-data:{
-labels:["Ligne 1","Ligne 2","Ligne 3"],
-datasets:[{
-label:"TRS %",
-data:[82,86,79]
-}]
-}
+return A-B
 
 })
 
-new Chart(document.getElementById("machineChart"),{
-
-type:"bar",
-
-data:{
-labels:["M1","M2","M3","M4","M5","M6","M7","M8","M9"],
-datasets:[{
-label:"TRS %",
-data:[85,82,79,88,84,77,83,81,86]
-}]
-}
-
-})
-
-new Chart(document.getElementById("paretoChart"),{
-
-type:"bar",
-
-data:{
-labels:["Arrêts","Micro-arrêts","Réglages","Vitesse réduite","Défauts"],
-datasets:[{
-label:"Impact %",
-data:[28,22,18,16,10]
-}]
-}
-
-})
-
-new Chart(document.getElementById("shiftChart"),{
-
-type:"bar",
-
-data:{
-labels:["Jour","Soir","Nuit"],
-datasets:[{
-label:"TRS %",
-data:[88,83,79]
-}]
-}
-
-})
-
-function realtime(){
-
-let t=random(70,95)
-
-trs.push(t)
-trs.shift()
-
-trsChart.data.datasets[0].data=trs
-trsChart.update()
-
-updateKPIs()
+rows.forEach(r=>table.appendChild(r))
 
 }
-
-setInterval(realtime,5000)
 
 function exportCSV(){
 
@@ -381,13 +353,23 @@ let url=URL.createObjectURL(blob)
 
 let a=document.createElement("a")
 a.href=url
-a.download="donnees_TRS.csv"
+a.download="TRS_data.csv"
 a.click()
+
+}
+
+function exportExcel(){
+
+let ws=XLSX.utils.json_to_sheet(data)
+let wb=XLSX.utils.book_new()
+
+XLSX.utils.book_append_sheet(wb,ws,"TRS")
+
+XLSX.writeFile(wb,"TRS_dashboard.xlsx")
 
 }
 
 </script>
 
 </body>
-
 </html>
