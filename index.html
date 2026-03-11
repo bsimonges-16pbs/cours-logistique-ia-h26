@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard TRS - Simulation Usine</title>
+<title>Dashboard TRS Industriel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -21,6 +21,10 @@ h1{text-align:center}
 .version{
 text-align:right;
 font-size:14px;
+margin-bottom:20px;
+}
+
+.filters{
 margin-bottom:20px;
 }
 
@@ -59,18 +63,36 @@ border-radius:10px;
 margin-bottom:20px;
 }
 
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th,td{
+padding:8px;
+text-align:center;
+border-bottom:1px solid #ddd;
+}
+
+th{
+background:#2c3e50;
+color:white;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<h1>Dashboard TRS – Simulation d'usine</h1>
+<h1>Dashboard TRS – Performance Industrielle</h1>
 
 <div class="version">
 
-Version v4.0<br>
-Dernière mise à jour : <span id="dateUpdate"></span>
+Version v5.0<br>
+Dernière mise à jour :
+<span id="dateUpdate"></span>
 
 </div>
 
@@ -84,9 +106,11 @@ Dernière mise à jour : <span id="dateUpdate"></span>
 
 </div>
 
-<label>Filtrer par mois :</label>
+<div class="filters">
 
-<select id="monthFilter" onchange="updateMonth()">
+Filtrer par mois :
+
+<select id="monthFilter" onchange="updateFilter()">
 
 <option value="all">Toute l'année</option>
 <option value="0">Janvier</option>
@@ -104,11 +128,25 @@ Dernière mise à jour : <span id="dateUpdate"></span>
 
 </select>
 
+Filtrer par semaine :
+
+<select id="weekFilter" onchange="updateFilter()">
+
+<option value="all">Toutes</option>
+<option value="1">Semaine 1</option>
+<option value="2">Semaine 2</option>
+<option value="3">Semaine 3</option>
+<option value="4">Semaine 4</option>
+
+</select>
+
+</div>
+
 <div class="grid">
 
 <div class="card">
 <h2 id="trs"></h2>
-<p>TRS Global</p>
+<p>TRS</p>
 </div>
 
 <div class="card">
@@ -139,7 +177,12 @@ Dernière mise à jour : <span id="dateUpdate"></span>
 </div>
 
 <div class="chart">
-<h2>TRS par ligne de production</h2>
+<h2>Disponibilité / Performance / Qualité</h2>
+<canvas id="dpqChart"></canvas>
+</div>
+
+<div class="chart">
+<h2>TRS par ligne</h2>
 <canvas id="lineChart"></canvas>
 </div>
 
@@ -153,6 +196,26 @@ Dernière mise à jour : <span id="dateUpdate"></span>
 <canvas id="paretoChart"></canvas>
 </div>
 
+<h2>Données détaillées</h2>
+
+<table id="dataTable">
+
+<thead>
+
+<tr>
+<th>Date</th>
+<th>TRS</th>
+<th>Disponibilité</th>
+<th>Performance</th>
+<th>Qualité</th>
+</tr>
+
+</thead>
+
+<tbody></tbody>
+
+</table>
+
 <script>
 
 document.getElementById("dateUpdate").innerText=
@@ -164,35 +227,58 @@ function random(min,max){
 return Math.random()*(max-min)+min
 }
 
-let trs=[]
-let disp=[]
-let perf=[]
-let qual=[]
+let data=[]
 let labels=[]
 
 for(let m=0;m<12;m++){
 
 for(let d=1;d<=30;d++){
 
+let trs=random(70,95)
+let disp=random(85,100)
+let perf=random(80,95)
+let qual=random(94,100)
+
+data.push({
+date:months[m]+"-"+d,
+month:m,
+week:Math.ceil(d/7),
+trs:trs,
+disp:disp,
+perf:perf,
+qual:qual
+})
+
 labels.push(months[m]+"-"+d)
 
-trs.push(random(70,95).toFixed(1))
-disp.push(random(85,100).toFixed(1))
-perf.push(random(80,95).toFixed(1))
-qual.push(random(94,100).toFixed(1))
-
 }
 
 }
 
-function avg(arr){
-return (arr.reduce((a,b)=>+a+ +b)/arr.length).toFixed(1)
+function avg(arr,key){
+
+return (arr.reduce((a,b)=>a+b[key],0)/arr.length).toFixed(1)
+
 }
 
-document.getElementById("trs").innerText=avg(trs)+" %"
-document.getElementById("disp").innerText=avg(disp)+" %"
-document.getElementById("perf").innerText=avg(perf)+" %"
-document.getElementById("qual").innerText=avg(qual)+" %"
+function updateKPIs(dataset){
+
+let trs=avg(dataset,"trs")
+let disp=avg(dataset,"disp")
+let perf=avg(dataset,"perf")
+let qual=avg(dataset,"qual")
+
+document.getElementById("trs").innerText=trs+" %"
+document.getElementById("disp").innerText=disp+" %"
+document.getElementById("perf").innerText=perf+" %"
+document.getElementById("qual").innerText=qual+" %"
+
+colorKPI("trs",trs,75,85)
+colorKPI("disp",disp,85,95)
+colorKPI("perf",perf,80,90)
+colorKPI("qual",qual,95,98)
+
+}
 
 function colorKPI(id,value,red,orange){
 
@@ -204,10 +290,57 @@ else el.style.color="green"
 
 }
 
-colorKPI("trs",avg(trs),75,85)
-colorKPI("disp",avg(disp),85,95)
-colorKPI("perf",avg(perf),80,90)
-colorKPI("qual",avg(qual),95,98)
+function fillTable(dataset){
+
+let tbody=document.querySelector("#dataTable tbody")
+tbody.innerHTML=""
+
+dataset.forEach(r=>{
+
+let row=
+`<tr>
+<td>${r.date}</td>
+<td>${r.trs.toFixed(1)}</td>
+<td>${r.disp.toFixed(1)}</td>
+<td>${r.perf.toFixed(1)}</td>
+<td>${r.qual.toFixed(1)}</td>
+</tr>`
+
+tbody.innerHTML+=row
+
+})
+
+}
+
+function updateFilter(){
+
+let month=document.getElementById("monthFilter").value
+let week=document.getElementById("weekFilter").value
+
+let filtered=data
+
+if(month!=="all")
+filtered=filtered.filter(d=>d.month==month)
+
+if(week!=="all")
+filtered=filtered.filter(d=>d.week==week)
+
+updateKPIs(filtered)
+
+trsChart.data.labels=filtered.map(d=>d.date)
+trsChart.data.datasets[0].data=filtered.map(d=>d.trs)
+
+dpqChart.data.labels=filtered.map(d=>d.date)
+dpqChart.data.datasets[0].data=filtered.map(d=>d.disp)
+dpqChart.data.datasets[1].data=filtered.map(d=>d.perf)
+dpqChart.data.datasets[2].data=filtered.map(d=>d.qual)
+
+trsChart.update()
+dpqChart.update()
+
+fillTable(filtered)
+
+}
 
 let trsChart=new Chart(document.getElementById("trsChart"),{
 
@@ -217,8 +350,23 @@ data:{
 labels:labels,
 datasets:[{
 label:"TRS %",
-data:trs
+data:data.map(d=>d.trs)
 }]
+}
+
+})
+
+let dpqChart=new Chart(document.getElementById("dpqChart"),{
+
+type:"line",
+
+data:{
+labels:labels,
+datasets:[
+{label:"Disponibilité",data:data.map(d=>d.disp)},
+{label:"Performance",data:data.map(d=>d.perf)},
+{label:"Qualité",data:data.map(d=>d.qual)}
+]
 }
 
 })
@@ -246,12 +394,7 @@ new Chart(document.getElementById("machineChart"),{
 type:"bar",
 
 data:{
-labels:[
-"M1","M2","M3",
-"M4","M5","M6",
-"M7","M8","M9"
-],
-
+labels:["M1","M2","M3","M4","M5","M6","M7","M8","M9"],
 datasets:[{
 label:"TRS %",
 data:[
@@ -291,28 +434,7 @@ data:[25,20,18,15,10]
 
 })
 
-function updateMonth(){
-
-let m=document.getElementById("monthFilter").value
-
-if(m==="all"){
-
-trsChart.data.labels=labels
-trsChart.data.datasets[0].data=trs
-
-}else{
-
-let start=m*30
-let end=start+30
-
-trsChart.data.labels=labels.slice(start,end)
-trsChart.data.datasets[0].data=trs.slice(start,end)
-
-}
-
-trsChart.update()
-
-}
+updateFilter()
 
 </script>
 
