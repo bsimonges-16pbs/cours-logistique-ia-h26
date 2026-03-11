@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard TRS Industriel</title>
+<title>Centre de contrôle TRS</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -12,7 +12,8 @@
 
 body{
 font-family:Segoe UI;
-background:#eef2f7;
+background:#0f172a;
+color:white;
 margin:40px;
 }
 
@@ -24,10 +25,6 @@ font-size:14px;
 margin-bottom:20px;
 }
 
-.filters{
-margin-bottom:20px;
-}
-
 .grid{
 display:grid;
 grid-template-columns:repeat(5,1fr);
@@ -36,10 +33,9 @@ margin-bottom:30px;
 }
 
 .card{
-background:white;
-padding:25px;
+background:#1e293b;
+padding:20px;
 border-radius:10px;
-box-shadow:0 8px 18px rgba(0,0,0,0.1);
 text-align:center;
 }
 
@@ -49,35 +45,22 @@ margin:0;
 }
 
 .chart{
-background:white;
-padding:25px;
+background:#1e293b;
+padding:20px;
 border-radius:10px;
-box-shadow:0 5px 12px rgba(0,0,0,0.1);
 margin-bottom:30px;
-}
-
-.legend{
-background:white;
-padding:15px;
-border-radius:10px;
-margin-bottom:20px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-background:white;
+background:#1e293b;
 }
 
 th,td{
 padding:8px;
+border-bottom:1px solid #334155;
 text-align:center;
-border-bottom:1px solid #ddd;
-}
-
-th{
-background:#2c3e50;
-color:white;
 }
 
 </style>
@@ -86,59 +69,13 @@ color:white;
 
 <body>
 
-<h1>Dashboard TRS – Performance Industrielle</h1>
+<h1>Centre de contrôle industriel – TRS</h1>
 
 <div class="version">
 
-Version v5.0<br>
+Version 6.0  
 Dernière mise à jour :
 <span id="dateUpdate"></span>
-
-</div>
-
-<div class="legend">
-
-<strong>Légende KPI</strong><br><br>
-
-<span style="color:red">● Rouge</span> Performance critique<br>
-<span style="color:orange">● Orange</span> Zone d'amélioration<br>
-<span style="color:green">● Vert</span> Objectif atteint
-
-</div>
-
-<div class="filters">
-
-Filtrer par mois :
-
-<select id="monthFilter" onchange="updateFilter()">
-
-<option value="all">Toute l'année</option>
-<option value="0">Janvier</option>
-<option value="1">Février</option>
-<option value="2">Mars</option>
-<option value="3">Avril</option>
-<option value="4">Mai</option>
-<option value="5">Juin</option>
-<option value="6">Juillet</option>
-<option value="7">Août</option>
-<option value="8">Septembre</option>
-<option value="9">Octobre</option>
-<option value="10">Novembre</option>
-<option value="11">Décembre</option>
-
-</select>
-
-Filtrer par semaine :
-
-<select id="weekFilter" onchange="updateFilter()">
-
-<option value="all">Toutes</option>
-<option value="1">Semaine 1</option>
-<option value="2">Semaine 2</option>
-<option value="3">Semaine 3</option>
-<option value="4">Semaine 4</option>
-
-</select>
 
 </div>
 
@@ -146,7 +83,7 @@ Filtrer par semaine :
 
 <div class="card">
 <h2 id="trs"></h2>
-<p>TRS</p>
+<p>TRS Global</p>
 </div>
 
 <div class="card">
@@ -165,8 +102,8 @@ Filtrer par semaine :
 </div>
 
 <div class="card">
-<h2>85%</h2>
-<p>Objectif TRS</p>
+<h2 id="trend"></h2>
+<p>Tendance TRS</p>
 </div>
 
 </div>
@@ -192,155 +129,70 @@ Filtrer par semaine :
 </div>
 
 <div class="chart">
-<h2>Pareto des pertes</h2>
+<h2>Pareto pertes</h2>
 <canvas id="paretoChart"></canvas>
 </div>
 
-<h2>Données détaillées</h2>
-
-<table id="dataTable">
-
-<thead>
-
-<tr>
-<th>Date</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Performance</th>
-<th>Qualité</th>
-</tr>
-
-</thead>
-
-<tbody></tbody>
-
-</table>
+<div class="chart">
+<h2>TRS par quart de travail</h2>
+<canvas id="shiftChart"></canvas>
+</div>
 
 <script>
 
-document.getElementById("dateUpdate").innerText=
+document.getElementById("dateUpdate").innerText =
 new Date().toLocaleDateString("fr-CA")
-
-const months=["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"]
 
 function random(min,max){
 return Math.random()*(max-min)+min
 }
 
-let data=[]
 let labels=[]
+let trs=[]
+let disp=[]
+let perf=[]
+let qual=[]
+
+const months=["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"]
 
 for(let m=0;m<12;m++){
 
 for(let d=1;d<=30;d++){
 
-let trs=random(70,95)
-let disp=random(85,100)
-let perf=random(80,95)
-let qual=random(94,100)
-
-data.push({
-date:months[m]+"-"+d,
-month:m,
-week:Math.ceil(d/7),
-trs:trs,
-disp:disp,
-perf:perf,
-qual:qual
-})
-
 labels.push(months[m]+"-"+d)
 
-}
+trs.push(random(70,95))
+disp.push(random(85,100))
+perf.push(random(80,95))
+qual.push(random(94,100))
 
 }
 
-function avg(arr,key){
+}
 
-return (arr.reduce((a,b)=>a+b[key],0)/arr.length).toFixed(1)
+function avg(arr){
+
+return (arr.reduce((a,b)=>a+b)/arr.length).toFixed(1)
 
 }
 
-function updateKPIs(dataset){
+function updateKPI(){
 
-let trs=avg(dataset,"trs")
-let disp=avg(dataset,"disp")
-let perf=avg(dataset,"perf")
-let qual=avg(dataset,"qual")
+let t=avg(trs)
 
-document.getElementById("trs").innerText=trs+" %"
-document.getElementById("disp").innerText=disp+" %"
-document.getElementById("perf").innerText=perf+" %"
-document.getElementById("qual").innerText=qual+" %"
+document.getElementById("trs").innerText=t+"%"
+document.getElementById("disp").innerText=avg(disp)+"%"
+document.getElementById("perf").innerText=avg(perf)+"%"
+document.getElementById("qual").innerText=avg(qual)+"%"
 
-colorKPI("trs",trs,75,85)
-colorKPI("disp",disp,85,95)
-colorKPI("perf",perf,80,90)
-colorKPI("qual",qual,95,98)
+let trend=trs[trs.length-1]-trs[trs.length-2]
+
+document.getElementById("trend").innerText =
+trend>0 ? "⬆" : "⬇"
 
 }
 
-function colorKPI(id,value,red,orange){
-
-let el=document.getElementById(id)
-
-if(value<red) el.style.color="red"
-else if(value<orange) el.style.color="orange"
-else el.style.color="green"
-
-}
-
-function fillTable(dataset){
-
-let tbody=document.querySelector("#dataTable tbody")
-tbody.innerHTML=""
-
-dataset.forEach(r=>{
-
-let row=
-`<tr>
-<td>${r.date}</td>
-<td>${r.trs.toFixed(1)}</td>
-<td>${r.disp.toFixed(1)}</td>
-<td>${r.perf.toFixed(1)}</td>
-<td>${r.qual.toFixed(1)}</td>
-</tr>`
-
-tbody.innerHTML+=row
-
-})
-
-}
-
-function updateFilter(){
-
-let month=document.getElementById("monthFilter").value
-let week=document.getElementById("weekFilter").value
-
-let filtered=data
-
-if(month!=="all")
-filtered=filtered.filter(d=>d.month==month)
-
-if(week!=="all")
-filtered=filtered.filter(d=>d.week==week)
-
-updateKPIs(filtered)
-
-trsChart.data.labels=filtered.map(d=>d.date)
-trsChart.data.datasets[0].data=filtered.map(d=>d.trs)
-
-dpqChart.data.labels=filtered.map(d=>d.date)
-dpqChart.data.datasets[0].data=filtered.map(d=>d.disp)
-dpqChart.data.datasets[1].data=filtered.map(d=>d.perf)
-dpqChart.data.datasets[2].data=filtered.map(d=>d.qual)
-
-trsChart.update()
-dpqChart.update()
-
-fillTable(filtered)
-
-}
+updateKPI()
 
 let trsChart=new Chart(document.getElementById("trsChart"),{
 
@@ -350,7 +202,7 @@ data:{
 labels:labels,
 datasets:[{
 label:"TRS %",
-data:data.map(d=>d.trs)
+data:trs
 }]
 }
 
@@ -363,9 +215,9 @@ type:"line",
 data:{
 labels:labels,
 datasets:[
-{label:"Disponibilité",data:data.map(d=>d.disp)},
-{label:"Performance",data:data.map(d=>d.perf)},
-{label:"Qualité",data:data.map(d=>d.qual)}
+{label:"Disponibilité",data:disp},
+{label:"Performance",data:perf},
+{label:"Qualité",data:qual}
 ]
 }
 
@@ -419,24 +271,55 @@ type:"bar",
 
 data:{
 labels:[
-"Arrêt machine",
+"Arrêts",
 "Micro-arrêts",
 "Réglages",
 "Vitesse réduite",
-"Défauts qualité"
+"Défauts"
 ],
 
 datasets:[{
 label:"Impact %",
-data:[25,20,18,15,10]
+data:[28,22,18,16,10]
 }]
 }
 
 })
 
-updateFilter()
+new Chart(document.getElementById("shiftChart"),{
+
+type:"bar",
+
+data:{
+labels:["Jour","Soir","Nuit"],
+datasets:[{
+label:"TRS %",
+data:[
+random(80,92),
+random(75,90),
+random(70,88)
+]
+}]
+}
+
+})
+
+function realtime(){
+
+trs.push(random(70,95))
+trs.shift()
+
+trsChart.data.datasets[0].data=trs
+trsChart.update()
+
+updateKPI()
+
+}
+
+setInterval(realtime,5000)
 
 </script>
 
 </body>
+
 </html>
