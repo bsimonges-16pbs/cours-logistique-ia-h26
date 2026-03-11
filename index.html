@@ -8,6 +8,7 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <style>
 
@@ -20,27 +21,21 @@ margin:40px;
 
 h1{text-align:center}
 
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:20px;
+}
+
 .version{
 text-align:right;
-margin-bottom:20px;
 }
 
 .legend{
 background:#1e293b;
 padding:15px;
 border-radius:8px;
-margin-bottom:20px;
-}
-
-.alert{
-background:#7f1d1d;
-padding:10px;
-border-radius:6px;
-margin-bottom:20px;
-display:none;
-}
-
-.filters{
 margin-bottom:20px;
 }
 
@@ -56,11 +51,6 @@ background:#1e293b;
 padding:20px;
 border-radius:10px;
 text-align:center;
-}
-
-.card h2{
-margin:0;
-font-size:26px;
 }
 
 .chart{
@@ -83,10 +73,6 @@ text-align:center;
 cursor:pointer;
 }
 
-th{
-background:#1f2937;
-}
-
 button{
 margin:10px;
 padding:10px 15px;
@@ -97,6 +83,14 @@ color:white;
 cursor:pointer;
 }
 
+.alert{
+background:#7f1d1d;
+padding:10px;
+border-radius:6px;
+margin-bottom:20px;
+display:none;
+}
+
 </style>
 
 </head>
@@ -105,11 +99,14 @@ cursor:pointer;
 
 <h1>Centre de contrôle industriel – TRS</h1>
 
-<div class="version">
+<div class="header">
 
-Version 8.0<br>
-Dernière mise à jour :
+<div class="version">
+<b>Version 9.0</b><br>
 <span id="dateUpdate"></span>
+</div>
+
+<div id="qrcode"></div>
 
 </div>
 
@@ -122,19 +119,6 @@ Dernière mise à jour :
 <span style="color:#ef4444">● Rouge</span> Performance critique<br>
 <span style="color:#f59e0b">● Orange</span> Zone amélioration<br>
 <span style="color:#22c55e">● Vert</span> Objectif atteint
-
-</div>
-
-<div class="filters">
-
-Filtre mois
-<select id="monthFilter"></select>
-
-Filtre semaine
-<select id="weekFilter"></select>
-
-Filtre machine
-<select id="machineFilter"></select>
 
 </div>
 
@@ -172,6 +156,26 @@ Filtre machine
 <canvas id="trsChart"></canvas>
 </div>
 
+<div class="chart">
+<h2>TRS par ligne de production</h2>
+<canvas id="lineChart"></canvas>
+</div>
+
+<div class="chart">
+<h2>TRS par machine</h2>
+<canvas id="machineChart"></canvas>
+</div>
+
+<div class="chart">
+<h2>Pareto des pertes</h2>
+<canvas id="paretoChart"></canvas>
+</div>
+
+<div class="chart">
+<h2>Analyse par quart de travail</h2>
+<canvas id="shiftChart"></canvas>
+</div>
+
 <h2>Données détaillées</h2>
 
 <button onclick="exportCSV()">Exporter CSV</button>
@@ -198,6 +202,16 @@ Filtre machine
 document.getElementById("dateUpdate").innerText=
 new Date().toLocaleDateString("fr-CA")
 
+/* QR CODE GITHUB */
+
+const githubLink="https://github.com/ton-repo/dashboard-trs"
+
+new QRCode(document.getElementById("qrcode"),{
+text:githubLink,
+width:120,
+height:120
+})
+
 function random(min,max){
 return Math.random()*(max-min)+min
 }
@@ -222,23 +236,15 @@ let qu=random(94,100)
 
 let date=months[m]+"-"+d
 
-data.push({
-date:date,
-trs:t,
-disp:di,
-perf:pe,
-qual:qu
-})
+data.push({date,trs:t,disp:di,perf:pe,qual:qu})
 
 labels.push(date)
-
 trs.push(t)
 disp.push(di)
 perf.push(pe)
 qual.push(qu)
 
 }
-
 }
 
 function avg(arr){
@@ -266,25 +272,22 @@ document.getElementById("qual").innerText=avg(qual)+"%"
 
 colorKPI("trs",t)
 
-if(t<75){
-showAlert("⚠ TRS critique sous 75%")
-}
-else if(t<85){
-showAlert("TRS sous objectif")
-}
+if(t<75) showAlert("⚠ TRS critique sous 75%")
+else if(t<85) showAlert("TRS sous objectif")
 
 }
 
 function showAlert(msg){
 
 let box=document.getElementById("alertBox")
-
 box.style.display="block"
 box.innerText=msg
 
 }
 
 updateKPIs()
+
+/* TABLEAU */
 
 function fillTable(){
 
@@ -308,20 +311,6 @@ tbody.innerHTML+=`
 
 fillTable()
 
-let trsChart=new Chart(document.getElementById("trsChart"),{
-
-type:"line",
-
-data:{
-labels:labels,
-datasets:[{
-label:"TRS %",
-data:trs
-}]
-}
-
-})
-
 function sortTable(n){
 
 let table=document.getElementById("dataTable")
@@ -339,6 +328,8 @@ return A-B
 rows.forEach(r=>table.appendChild(r))
 
 }
+
+/* EXPORT */
 
 function exportCSV(){
 
@@ -368,6 +359,58 @@ XLSX.utils.book_append_sheet(wb,ws,"TRS")
 XLSX.writeFile(wb,"TRS_dashboard.xlsx")
 
 }
+
+/* GRAPHIQUES */
+
+new Chart(document.getElementById("trsChart"),{
+type:"line",
+data:{labels:labels,datasets:[{label:"TRS",data:trs}]}
+})
+
+new Chart(document.getElementById("lineChart"),{
+type:"bar",
+data:{
+labels:["Ligne 1","Ligne 2","Ligne 3","Ligne 4"],
+datasets:[{label:"TRS %",data:[82,87,79,91]}]
+}
+})
+
+new Chart(document.getElementById("machineChart"),{
+type:"bar",
+data:{
+labels:["Machine A","Machine B","Machine C","Machine D"],
+datasets:[{label:"TRS %",data:[84,77,89,92]}]
+}
+})
+
+new Chart(document.getElementById("paretoChart"),{
+type:"bar",
+data:{
+labels:["Arrêt","Micro-arrêt","Vitesse","Réglage","Qualité"],
+datasets:[{label:"Impact %",data:[30,22,18,15,10]}]
+}
+})
+
+new Chart(document.getElementById("shiftChart"),{
+type:"bar",
+data:{
+labels:["Jour","Soir","Nuit"],
+datasets:[{label:"TRS %",data:[88,81,76]}]
+}
+})
+
+/* SIMULATION TEMPS RÉEL */
+
+setInterval(()=>{
+
+let newTRS=random(70,95)
+
+trs.push(newTRS)
+trs.shift()
+
+updateKPIs()
+
+},5000)
 
 </script>
 
