@@ -7,7 +7,6 @@
 <title>Dashboard TRS Industriel</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <style>
 
@@ -19,13 +18,12 @@ margin:40px;
 
 h1{
 text-align:center;
-margin-bottom:5px;
 }
 
 .version{
 text-align:right;
 font-size:14px;
-margin-bottom:25px;
+margin-bottom:20px;
 }
 
 .grid{
@@ -41,11 +39,6 @@ padding:25px;
 border-radius:10px;
 box-shadow:0 8px 18px rgba(0,0,0,0.1);
 text-align:center;
-transition:0.3s;
-}
-
-.card:hover{
-transform:translateY(-5px);
 }
 
 .card h2{
@@ -61,49 +54,34 @@ box-shadow:0 5px 12px rgba(0,0,0,0.1);
 margin-bottom:30px;
 }
 
-.buttons{
-text-align:center;
-margin-bottom:20px;
+.legend{
+background:white;
+padding:15px;
+border-radius:10px;
+margin-bottom:30px;
+box-shadow:0 5px 12px rgba(0,0,0,0.1);
 }
 
-button{
-padding:12px 20px;
-margin:5px;
-border:none;
-border-radius:6px;
-background:#2c7be5;
-color:white;
-cursor:pointer;
-}
-
-button:hover{
-background:#1a5dcc;
+.legend span{
+font-weight:bold;
+margin-right:10px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
 background:white;
-box-shadow:0 5px 12px rgba(0,0,0,0.1);
 }
 
 th,td{
-padding:10px;
-border-bottom:1px solid #ddd;
+padding:8px;
 text-align:center;
+border-bottom:1px solid #ddd;
 }
 
 th{
 background:#2c3e50;
 color:white;
-}
-
-@media(max-width:900px){
-
-.grid{
-grid-template-columns:1fr;
-}
-
 }
 
 </style>
@@ -112,37 +90,42 @@ grid-template-columns:1fr;
 
 <body>
 
-<h1>Dashboard TRS – Performance Industrielle</h1>
+<h1>Dashboard TRS – Analyse annuelle</h1>
 
 <div class="version">
-Version v2.0<br>
+Version v3.0<br>
 Dernière mise à jour : <span id="dateUpdate"></span>
 </div>
 
-<div style="text-align:center;margin-bottom:25px">
+<div class="legend">
 
-<label>Filtrer par semaine :</label>
+<strong>Légende KPI</strong><br><br>
 
-<select id="weekFilter" onchange="filterWeek()">
+<span style="color:red">● Rouge</span> Performance critique<br>
+<span style="color:orange">● Orange</span> Zone d'amélioration<br>
+<span style="color:green">● Vert</span> Objectif atteint
 
-<option value="all">Tout le mois</option>
-<option value="1">Semaine 1</option>
-<option value="2">Semaine 2</option>
-<option value="3">Semaine 3</option>
-<option value="4">Semaine 4</option>
+</div>
+
+<label>Filtrer par mois :</label>
+
+<select id="monthFilter" onchange="updateMonth()">
+
+<option value="all">Toute l'année</option>
+<option value="0">Janvier</option>
+<option value="1">Février</option>
+<option value="2">Mars</option>
+<option value="3">Avril</option>
+<option value="4">Mai</option>
+<option value="5">Juin</option>
+<option value="6">Juillet</option>
+<option value="7">Août</option>
+<option value="8">Septembre</option>
+<option value="9">Octobre</option>
+<option value="10">Novembre</option>
+<option value="11">Décembre</option>
 
 </select>
-
-</div>
-
-<div class="buttons">
-
-<button onclick="exportExcel()">Exporter Excel</button>
-<button onclick="exportCSV()">Exporter CSV</button>
-
-<input type="file" id="excelFile">
-
-</div>
 
 <div class="grid">
 
@@ -181,194 +164,121 @@ Dernière mise à jour : <span id="dateUpdate"></span>
 <canvas id="dpqChart"></canvas>
 </div>
 
-<div class="chart">
-<h2>Jauge TRS</h2>
-<canvas id="gaugeTRS"></canvas>
-</div>
-
-<div class="chart">
-<h2>Pareto des pertes</h2>
-<canvas id="pareto"></canvas>
-</div>
-
-<div class="chart">
-<h2>TRS par machine</h2>
-<canvas id="machineChart"></canvas>
-</div>
-
-<div class="chart">
-<h2>TRS par quart</h2>
-<canvas id="shiftChart"></canvas>
-</div>
-
-<div class="chart">
-<h2>Prévision TRS</h2>
-<canvas id="forecast"></canvas>
-</div>
-
-<h2>Données TRS</h2>
-
-<table id="dataTable">
-
-<thead>
-<tr>
-<th>Jour</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Performance</th>
-<th>Qualité</th>
-</tr>
-</thead>
-
-<tbody></tbody>
-
-</table>
-
 <script>
 
-document.getElementById("dateUpdate").innerText =
+document.getElementById("dateUpdate").innerText=
 new Date().toLocaleDateString("fr-CA")
 
-const trs=[69.27,76.90,83.36,83.64,86.47,93.18,95.24,81.15,85.88,83.20,
-76.64,79.85,75.82,79.87,81.25,79.73,72.55,83.64,83.89,88.84,
-84.97,75.36,73.31,82.79,79.38,76.50,72.52,71.69,84.00,76.48,73.28];
+const months=[
+"Jan","Fev","Mar","Avr","Mai","Jun",
+"Jul","Aou","Sep","Oct","Nov","Dec"
+]
 
-const disp=[87.50,98.96,94.38,91.88,95.42,99.17,99.17,95.00,90.00,93.75,
-90.83,91.04,88.13,99.58,100.00,98.13,94.38,90.83,86.04,92.50,
-98.75,83.54,90.00,98.13,100.00,97.92,90.42,92.50,93.33,94.38,83.75];
+function random(min,max){
+return Math.random()*(max-min)+min
+}
 
-const perf=[83.33,80.42,91.88,93.75,92.29,96.67,97.08,87.50,96.67,93.54,
-84.58,89.79,86.88,81.67,83.33,81.46,81.46,93.54,98.13,96.88,
-87.71,94.17,84.79,89.17,81.67,82.29,80.42,81.88,93.75,82.71,90.63];
+let trs=[]
+let disp=[]
+let perf=[]
+let qual=[]
+let labels=[]
 
-const qual=[95.00,96.63,96.15,97.11,98.19,97.20,98.93,97.62,98.71,94.88,
-99.75,97.68,99.04,98.21,97.50,99.74,94.37,98.44,99.36,99.14,
-98.10,95.80,96.07,94.63,97.19,94.94,99.74,94.66,96.00,97.98,96.55];
+for(let m=0;m<12;m++){
 
-const labels=[...Array(31).keys()].map(x=>"Jour "+(x+1))
+for(let d=1;d<=30;d++){
+
+labels.push(months[m]+"-"+d)
+
+trs.push(random(70,95).toFixed(1))
+disp.push(random(85,100).toFixed(1))
+perf.push(random(80,95).toFixed(1))
+qual.push(random(94,100).toFixed(1))
+
+}
+
+}
 
 function avg(arr){
-return (arr.reduce((a,b)=>a+b)/arr.length).toFixed(1)
-}
 
-function colorKPI(id,value,red,orange){
-
-let element=document.getElementById(id)
-
-if(value<red) element.style.color="red"
-else if(value<orange) element.style.color="orange"
-else element.style.color="green"
+return (arr.reduce((a,b)=>+a+ +b)/arr.length).toFixed(1)
 
 }
 
-let trsValue=avg(trs)
-
-document.getElementById("trs").innerText=trsValue+" %"
+document.getElementById("trs").innerText=avg(trs)+" %"
 document.getElementById("disp").innerText=avg(disp)+" %"
 document.getElementById("perf").innerText=avg(perf)+" %"
 document.getElementById("qual").innerText=avg(qual)+" %"
 
-colorKPI("trs",trsValue,75,85)
+function colorKPI(id,value,red,orange){
+
+let el=document.getElementById(id)
+
+if(value<red) el.style.color="red"
+else if(value<orange) el.style.color="orange"
+else el.style.color="green"
+
+}
+
+colorKPI("trs",avg(trs),75,85)
 colorKPI("disp",avg(disp),85,95)
 colorKPI("perf",avg(perf),80,90)
 colorKPI("qual",avg(qual),95,98)
 
 let trsChart=new Chart(document.getElementById("trsChart"),{
+
 type:"line",
-data:{labels:labels,datasets:[{label:"TRS %",data:trs}]}
+
+data:{
+labels:labels,
+datasets:[{
+label:"TRS %",
+data:trs
+}]
+}
+
 })
 
 let dpqChart=new Chart(document.getElementById("dpqChart"),{
+
 type:"line",
+
 data:{
 labels:labels,
 datasets:[
 {label:"Disponibilité",data:disp},
 {label:"Performance",data:perf},
 {label:"Qualité",data:qual}
-]}
-})
-
-new Chart(document.getElementById("gaugeTRS"),{
-type:"doughnut",
-data:{labels:["TRS","Reste"],
-datasets:[{data:[trsValue,100-trsValue],backgroundColor:["green","#e0e0e0"]}]},
-options:{rotation:-90,circumference:180,plugins:{legend:{display:false}}}
-})
-
-new Chart(document.getElementById("pareto"),{
-type:"bar",
-data:{
-labels:["Arrêt machine","Micro-arrêts","Réglages","Vitesse réduite","Défauts"],
-datasets:[{label:"Impact %",data:[25,20,18,15,10]}]
-}
-})
-
-new Chart(document.getElementById("machineChart"),{
-type:"bar",
-data:{labels:["Machine A","Machine B","Machine C","Machine D","Machine E"],
-datasets:[{label:"TRS %",data:[82,78,88,74,91]}]}
-})
-
-new Chart(document.getElementById("shiftChart"),{
-type:"bar",
-data:{labels:["Matin","Soir","Nuit"],
-datasets:[{label:"TRS %",data:[84,79,73]}]}
-})
-
-let forecast=[...trs,80,82,85]
-let forecastLabels=[...labels,"Prévision1","Prévision2","Prévision3"]
-
-new Chart(document.getElementById("forecast"),{
-type:"line",
-data:{labels:forecastLabels,datasets:[{label:"Prévision TRS %",data:forecast}]}
-})
-
-const table=document.querySelector("#dataTable tbody")
-
-for(let i=0;i<trs.length;i++){
-
-table.innerHTML+=`
-<tr>
-<td>${i+1}</td>
-<td>${trs[i]}</td>
-<td>${disp[i]}</td>
-<td>${perf[i]}</td>
-<td>${qual[i]}</td>
-</tr>
-`
+]
 }
 
-function filterWeek(){
+})
 
-let week=document.getElementById("weekFilter").value
+function updateMonth(){
 
-let start=0
-let end=31
+let m=document.getElementById("monthFilter").value
 
-if(week==1){start=0;end=7}
-if(week==2){start=7;end=14}
-if(week==3){start=14;end=21}
-if(week==4){start=21;end=31}
+if(m==="all"){
+
+trsChart.data.labels=labels
+trsChart.data.datasets[0].data=trs
+
+}else{
+
+let start=m*30
+let end=start+30
 
 trsChart.data.labels=labels.slice(start,end)
 trsChart.data.datasets[0].data=trs.slice(start,end)
+
+}
 
 trsChart.update()
 
 }
 
-function exportExcel(){
-let wb=XLSX.utils.table_to_book(document.getElementById("dataTable"))
-XLSX.writeFile(wb,"TRS_dashboard.xlsx")
-}
-
-function exportCSV(){
-let wb=XLSX.utils.table_to_book(document.getElementById("dataTable"))
-XLSX.writeFile(wb,"TRS_dashboard.csv")
-}
-
 </script>
 
 </body>
+
 </html>
