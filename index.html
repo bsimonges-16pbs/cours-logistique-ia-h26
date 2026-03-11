@@ -2,15 +2,14 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<title>Dashboard TRS Industriel</title>
+<title>Dashboard TRS Production</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-chart-gauge"></script>
 
 <style>
 
 body{
-font-family: "Segoe UI";
+font-family:Segoe UI;
 background:#eef2f7;
 margin:40px;
 }
@@ -30,8 +29,8 @@ margin-bottom:40px;
 .card{
 background:white;
 padding:25px;
-border-radius:12px;
-box-shadow:0 5px 12px rgba(0,0,0,0.1);
+border-radius:10px;
+box-shadow:0 5px 10px rgba(0,0,0,0.1);
 text-align:center;
 }
 
@@ -43,8 +42,8 @@ margin:0;
 .chart{
 background:white;
 padding:20px;
-border-radius:12px;
-box-shadow:0 5px 12px rgba(0,0,0,0.1);
+border-radius:10px;
+box-shadow:0 5px 10px rgba(0,0,0,0.1);
 margin-bottom:30px;
 }
 
@@ -58,14 +57,12 @@ table{
 width:100%;
 border-collapse:collapse;
 background:white;
-border-radius:10px;
-overflow:hidden;
 }
 
 th,td{
 padding:10px;
+border-bottom:1px solid #ddd;
 text-align:center;
-border-bottom:1px solid #eee;
 }
 
 th{
@@ -74,7 +71,6 @@ color:white;
 }
 
 .good{color:green;font-weight:bold;}
-.medium{color:orange;font-weight:bold;}
 .bad{color:red;font-weight:bold;}
 
 </style>
@@ -82,7 +78,7 @@ color:white;
 
 <body>
 
-<h1>Dashboard TRS – Performance Industrielle</h1>
+<h1>Dashboard TRS – Performance Production</h1>
 
 <div class="grid">
 
@@ -109,10 +105,6 @@ color:white;
 </div>
 
 <div class="chart">
-<canvas id="gauge"></canvas>
-</div>
-
-<div class="chart">
 <canvas id="trsChart"></canvas>
 </div>
 
@@ -127,7 +119,7 @@ color:white;
 <div class="tables">
 
 <div>
-<h3>Top Performance TRS</h3>
+<h3>Top 5 TRS</h3>
 <table id="topTable">
 <tr>
 <th>Date</th>
@@ -137,7 +129,7 @@ color:white;
 </div>
 
 <div>
-<h3>Pires journées TRS</h3>
+<h3>TRS les plus faibles</h3>
 <table id="badTable">
 <tr>
 <th>Date</th>
@@ -151,16 +143,39 @@ color:white;
 <script>
 
 const data=[
-{date:"01/01",disp:87.5,perf:83.33,qual:95,trs:69.27,pr:400,pt:480},
-{date:"02/01",disp:98.96,perf:80.42,qual:96.63,trs:76.9,pr:386,pt:480},
+
+{date:"01/01",disp:87.50,perf:83.33,qual:95.00,trs:69.27,pr:400,pt:480},
+{date:"02/01",disp:98.96,perf:80.42,qual:96.63,trs:76.90,pr:386,pt:480},
 {date:"03/01",disp:94.38,perf:91.88,qual:96.15,trs:83.36,pr:441,pt:480},
 {date:"04/01",disp:91.88,perf:93.75,qual:97.11,trs:83.64,pr:450,pt:480},
 {date:"05/01",disp:95.42,perf:92.29,qual:98.19,trs:86.47,pr:443,pt:480},
-{date:"06/01",disp:99.17,perf:96.67,qual:97.2,trs:93.18,pr:464,pt:480},
+{date:"06/01",disp:99.17,perf:96.67,qual:97.20,trs:93.18,pr:464,pt:480},
 {date:"07/01",disp:99.17,perf:97.08,qual:98.93,trs:95.24,pr:466,pt:480},
-{date:"08/01",disp:95,perf:87.5,qual:97.62,trs:81.15,pr:420,pt:480},
-{date:"09/01",disp:90,perf:96.67,qual:98.71,trs:85.88,pr:464,pt:480},
-{date:"10/01",disp:93.75,perf:93.54,qual:94.88,trs:83.2,pr:449,pt:480}
+{date:"08/01",disp:95.00,perf:87.50,qual:97.62,trs:81.15,pr:420,pt:480},
+{date:"09/01",disp:90.00,perf:96.67,qual:98.71,trs:85.88,pr:464,pt:480},
+{date:"10/01",disp:93.75,perf:93.54,qual:94.88,trs:83.20,pr:449,pt:480},
+{date:"11/01",disp:90.83,perf:84.58,qual:99.75,trs:76.64,pr:406,pt:480},
+{date:"12/01",disp:91.04,perf:89.79,qual:97.68,trs:79.85,pr:431,pt:480},
+{date:"13/01",disp:88.13,perf:86.88,qual:99.04,trs:75.82,pr:417,pt:480},
+{date:"14/01",disp:99.58,perf:81.67,qual:98.21,trs:79.87,pr:392,pt:480},
+{date:"15/01",disp:100.00,perf:83.33,qual:97.50,trs:81.25,pr:400,pt:480},
+{date:"16/01",disp:98.13,perf:81.46,qual:99.74,trs:79.73,pr:391,pt:480},
+{date:"17/01",disp:94.38,perf:81.46,qual:94.37,trs:72.55,pr:391,pt:480},
+{date:"18/01",disp:90.83,perf:93.54,qual:98.44,trs:83.64,pr:449,pt:480},
+{date:"19/01",disp:86.04,perf:98.13,qual:99.36,trs:83.89,pr:471,pt:480},
+{date:"20/01",disp:92.50,perf:96.88,qual:99.14,trs:88.84,pr:465,pt:480},
+{date:"21/01",disp:98.75,perf:87.71,qual:98.10,trs:84.97,pr:421,pt:480},
+{date:"22/01",disp:83.54,perf:94.17,qual:95.80,trs:75.36,pr:452,pt:480},
+{date:"23/01",disp:90.00,perf:84.79,qual:96.07,trs:73.31,pr:407,pt:480},
+{date:"24/01",disp:98.13,perf:89.17,qual:94.63,trs:82.79,pr:428,pt:480},
+{date:"25/01",disp:100.00,perf:81.67,qual:97.19,trs:79.38,pr:392,pt:480},
+{date:"26/01",disp:97.92,perf:82.29,qual:94.94,trs:76.50,pr:395,pt:480},
+{date:"27/01",disp:90.42,perf:80.42,qual:99.74,trs:72.52,pr:386,pt:480},
+{date:"28/01",disp:92.50,perf:81.88,qual:94.66,trs:71.69,pr:393,pt:480},
+{date:"29/01",disp:93.33,perf:93.75,qual:96.00,trs:84.00,pr:450,pt:480},
+{date:"30/01",disp:94.38,perf:82.71,qual:97.98,trs:76.48,pr:397,pt:480},
+{date:"31/01",disp:83.75,perf:90.63,qual:96.55,trs:73.28,pr:435,pt:480}
+
 ];
 
 const labels=data.map(d=>d.date);
@@ -180,24 +195,6 @@ document.getElementById("trs").innerText=avg(trs)+" %";
 document.getElementById("disp").innerText=avg(disp)+" %";
 document.getElementById("perf").innerText=avg(perf)+" %";
 document.getElementById("qual").innerText=avg(qual)+" %";
-
-const trsAvg=parseFloat(avg(trs));
-
-new Chart(document.getElementById("gauge"),{
-type:'doughnut',
-data:{
-datasets:[{
-data:[trsAvg,100-trsAvg]
-}]
-},
-options:{
-rotation:-90,
-circumference:180,
-plugins:{
-legend:{display:false}
-}
-}
-});
 
 new Chart(document.getElementById("trsChart"),{
 type:"line",
@@ -235,18 +232,19 @@ datasets:[
 });
 
 const sorted=[...data].sort((a,b)=>b.trs-a.trs);
+
 const top=sorted.slice(0,5);
 const bad=sorted.slice(-5);
 
 top.forEach(d=>{
 document.getElementById("topTable").innerHTML+=
 `<tr><td>${d.date}</td><td class="good">${d.trs}</td></tr>`
-})
+});
 
 bad.forEach(d=>{
 document.getElementById("badTable").innerHTML+=
 `<tr><td>${d.date}</td><td class="bad">${d.trs}</td></tr>`
-})
+});
 
 </script>
 
