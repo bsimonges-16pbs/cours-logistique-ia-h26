@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
 <meta charset="UTF-8">
 <title>Dashboard TRS Production</title>
@@ -47,33 +48,12 @@ box-shadow:0 5px 10px rgba(0,0,0,0.1);
 margin-bottom:30px;
 }
 
-.tables{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:30px;
+canvas{
+height:350px !important;
 }
-
-table{
-width:100%;
-border-collapse:collapse;
-background:white;
-}
-
-th,td{
-padding:10px;
-border-bottom:1px solid #ddd;
-text-align:center;
-}
-
-th{
-background:#2c3e50;
-color:white;
-}
-
-.good{color:green;font-weight:bold;}
-.bad{color:red;font-weight:bold;}
 
 </style>
+
 </head>
 
 <body>
@@ -83,22 +63,22 @@ color:white;
 <div class="grid">
 
 <div class="card">
-<h2 id="trs"></h2>
+<h2 id="trs">0%</h2>
 <p>TRS moyen</p>
 </div>
 
 <div class="card">
-<h2 id="disp"></h2>
+<h2 id="disp">0%</h2>
 <p>Disponibilité</p>
 </div>
 
 <div class="card">
-<h2 id="perf"></h2>
+<h2 id="perf">0%</h2>
 <p>Performance</p>
 </div>
 
 <div class="card">
-<h2 id="qual"></h2>
+<h2 id="qual">0%</h2>
 <p>Qualité</p>
 </div>
 
@@ -116,31 +96,9 @@ color:white;
 <canvas id="prodChart"></canvas>
 </div>
 
-<div class="tables">
-
-<div>
-<h3>Top 5 TRS</h3>
-<table id="topTable">
-<tr>
-<th>Date</th>
-<th>TRS %</th>
-</tr>
-</table>
-</div>
-
-<div>
-<h3>TRS les plus faibles</h3>
-<table id="badTable">
-<tr>
-<th>Date</th>
-<th>TRS %</th>
-</tr>
-</table>
-</div>
-
-</div>
-
 <script>
+
+document.addEventListener("DOMContentLoaded", function(){
 
 const data=[
 
@@ -198,52 +156,26 @@ document.getElementById("qual").innerText=avg(qual)+" %";
 
 new Chart(document.getElementById("trsChart"),{
 type:"line",
-data:{
-labels:labels,
-datasets:[{
-label:"TRS %",
-data:trs,
-tension:0.3
-}]
-}
+data:{labels:labels,datasets:[{label:"TRS %",data:trs}]}
 });
 
 new Chart(document.getElementById("dpqChart"),{
 type:"line",
-data:{
-labels:labels,
-datasets:[
+data:{labels:labels,datasets:[
 {label:"Disponibilité",data:disp},
 {label:"Performance",data:perf},
 {label:"Qualité",data:qual}
-]
-}
+]}
 });
 
 new Chart(document.getElementById("prodChart"),{
 type:"bar",
-data:{
-labels:labels,
-datasets:[
+data:{labels:labels,datasets:[
 {label:"Production réelle",data:pr},
 {label:"Production théorique",data:pt}
-]
-}
+]}
 });
 
-const sorted=[...data].sort((a,b)=>b.trs-a.trs);
-
-const top=sorted.slice(0,5);
-const bad=sorted.slice(-5);
-
-top.forEach(d=>{
-document.getElementById("topTable").innerHTML+=
-`<tr><td>${d.date}</td><td class="good">${d.trs}</td></tr>`
-});
-
-bad.forEach(d=>{
-document.getElementById("badTable").innerHTML+=
-`<tr><td>${d.date}</td><td class="bad">${d.trs}</td></tr>`
 });
 
 </script>
