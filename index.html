@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle industriel – TRS</title>
+<title>Centre de contrôle industriel TRS V16.0</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18,10 +18,7 @@ color:white;
 margin:30px;
 }
 
-h1{
-text-align:center;
-margin-bottom:25px;
-}
+h1{text-align:center}
 
 .topbar{
 display:flex;
@@ -32,25 +29,23 @@ margin-bottom:30px;
 
 button{
 padding:10px 15px;
-border:none;
 background:#2563eb;
+border:none;
 color:white;
 border-radius:6px;
 cursor:pointer;
-margin:5px;
 }
 
 select{
 padding:8px;
 border-radius:5px;
-margin-right:10px;
 }
 
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
 gap:20px;
-margin-bottom:30px;
+margin-bottom:25px;
 }
 
 .card{
@@ -60,12 +55,8 @@ border-radius:10px;
 text-align:center;
 }
 
-.legend{
-margin-bottom:25px;
-}
-
 .legend span{
-margin-right:20px;
+margin-right:15px;
 font-weight:bold;
 }
 
@@ -73,69 +64,48 @@ font-weight:bold;
 .orange{color:orange}
 .green{color:lime}
 
-.lineGrid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
-margin-bottom:25px;
-}
-
-.line{
-background:#1e293b;
-padding:15px;
-border-radius:8px;
-}
-
 .machineGrid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:15px;
-margin-bottom:25px;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:20px;
 }
 
 .machine{
+padding:20px;
+border-radius:10px;
 background:#1e293b;
-padding:15px;
-border-radius:8px;
 text-align:center;
 }
+
+.ok{background:#15803d}
+.warn{background:#ea580c}
+.fail{background:#dc2626}
 
 .chart{
 background:#1e293b;
 padding:20px;
 border-radius:10px;
-margin-bottom:25px;
+margin-top:30px;
 }
 
 .aiBox{
 background:#1e293b;
 padding:20px;
 border-radius:10px;
-margin-bottom:30px;
+margin-top:30px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
 background:#1e293b;
+margin-top:30px;
 }
 
 th,td{
 padding:8px;
 border-bottom:1px solid #334155;
-text-align:center;
 }
-
-.factory{
-display:grid;
-grid-template-columns:repeat(2,200px);
-gap:20px;
-margin-top:20px;
-}
-
-.machineOK{background:#15803d}
-.machineWarn{background:#ea580c}
-.machineFail{background:#dc2626}
 
 </style>
 
@@ -150,12 +120,13 @@ margin-top:20px;
 <div>
 
 <select>
+<option>Version V16.0</option>
 <option>Version V15.0</option>
 <option>Version V14.0</option>
 <option>Version V13.0</option>
 </select>
 
-<select id="timeFilter">
+<select>
 <option>Jour</option>
 <option>Semaine</option>
 <option>Mois</option>
@@ -174,8 +145,8 @@ margin-top:20px;
 <div class="legend">
 
 <span class="red">TRS < 70%</span>
-<span class="orange">TRS 70-85%</span>
-<span class="green">TRS > 85%</span>
+<span class="orange">70-85%</span>
+<span class="green">> 85%</span>
 
 </div>
 
@@ -183,83 +154,59 @@ margin-top:20px;
 
 <div class="card">
 <h2 id="trs">--</h2>
-<p>TRS</p>
+TRS
 </div>
 
 <div class="card">
-<h2 id="disp">--</h2>
-<p>Disponibilité</p>
+<h2 id="production">0</h2>
+Pièces produites
 </div>
 
 <div class="card">
-<h2 id="perf">--</h2>
-<p>Performance</p>
+<h2 id="availability">--</h2>
+Disponibilité
 </div>
 
 <div class="card">
-<h2 id="qual">--</h2>
-<p>Qualité</p>
+<h2 id="quality">--</h2>
+Qualité
 </div>
 
 </div>
 
-<h2>TRS par ligne</h2>
-
-<div class="lineGrid">
-
-<div class="line">Ligne 1 : <span id="l1"></span></div>
-<div class="line">Ligne 2 : <span id="l2"></span></div>
-<div class="line">Ligne 3 : <span id="l3"></span></div>
-<div class="line">Ligne 4 : <span id="l4"></span></div>
-
-</div>
-
-<h2>TRS machines temps réel</h2>
+<h2>Machines production</h2>
 
 <div class="machineGrid">
 
-<div class="machine">Machine A <br><span id="m1"></span></div>
-<div class="machine">Machine B <br><span id="m2"></span></div>
-<div class="machine">Machine C <br><span id="m3"></span></div>
-<div class="machine">Machine D <br><span id="m4"></span></div>
+<div class="machine" id="m1">Machine A<br><span id="p1">0</span></div>
+<div class="machine" id="m2">Machine B<br><span id="p2">0</span></div>
+<div class="machine" id="m3">Machine C<br><span id="p3">0</span></div>
+<div class="machine" id="m4">Machine D<br><span id="p4">0</span></div>
 
 </div>
-
-<h2>IA Maintenance prédictive</h2>
 
 <div class="aiBox">
 
-<p id="machineRisk"></p>
-<p id="cause"></p>
+<h3>IA maintenance prédictive</h3>
 
-<ul id="action"></ul>
+<p id="aiMachine"></p>
+<p id="aiCause"></p>
 
-</div>
-
-<h2>Plan usine</h2>
-
-<div class="factory">
-
-<div class="card" id="fa">Machine A</div>
-<div class="card" id="fb">Machine B</div>
-<div class="card" id="fc">Machine C</div>
-<div class="card" id="fd">Machine D</div>
+<ul id="aiAction"></ul>
 
 </div>
 
 <div class="chart">
+
 <canvas id="pareto"></canvas>
+
 </div>
 
 <div class="chart">
-<canvas id="shift"></canvas>
-</div>
 
-<div class="chart">
 <canvas id="history"></canvas>
-</div>
 
-<h2>Données production</h2>
+</div>
 
 <table>
 
@@ -269,44 +216,74 @@ margin-top:20px;
 <th>Mois</th>
 <th>TRS</th>
 <th>Disponibilité</th>
-<th>Performance</th>
 <th>Qualité</th>
 </tr>
 
 </thead>
 
-<tbody id="dataTable"></tbody>
+<tbody id="tableData"></tbody>
 
 </table>
 
 <script>
 
-function random(min,max){
-return (Math.random()*(max-min)+min).toFixed(1)
+let production=[0,0,0,0]
+
+function simulateFactory(){
+
+let total=0
+
+production.forEach((v,i)=>{
+
+let machine=document.getElementById("m"+(i+1))
+
+let r=Math.random()
+
+machine.classList.remove("ok","warn","fail")
+
+if(r<0.7){
+
+machine.classList.add("ok")
+production[i]+=Math.floor(Math.random()*5)
+
 }
 
-function updateKPIs(){
+else if(r<0.9){
 
-document.getElementById("trs").innerText=random(70,95)+"%"
-document.getElementById("disp").innerText=random(85,100)+"%"
-document.getElementById("perf").innerText=random(80,95)+"%"
-document.getElementById("qual").innerText=random(94,100)+"%"
+machine.classList.add("warn")
+production[i]+=1
 
 }
 
-function updateLines(){
+else{
 
-["l1","l2","l3","l4"].forEach(id=>{
-document.getElementById(id).innerText=random(70,95)+"%"
+machine.classList.add("fail")
+
+}
+
+document.getElementById("p"+(i+1)).innerText=production[i]
+
+total+=production[i]
+
 })
 
+document.getElementById("production").innerText=total
+
+updateTRS()
+
 }
 
-function updateMachines(){
+function updateTRS(){
 
-["m1","m2","m3","m4"].forEach(id=>{
-document.getElementById(id).innerText=random(70,95)+"%"
-})
+let availability=(Math.random()*15+85)
+let quality=(Math.random()*5+94)
+let performance=(Math.random()*15+80)
+
+let trs=(availability*quality*performance)/10000
+
+document.getElementById("availability").innerText=availability.toFixed(1)+"%"
+document.getElementById("quality").innerText=quality.toFixed(1)+"%"
+document.getElementById("trs").innerText=trs.toFixed(1)+"%"
 
 }
 
@@ -314,26 +291,28 @@ function predictiveAI(){
 
 const machines=["Machine A","Machine B","Machine C","Machine D"]
 
-const causes=["Surchauffe moteur","Vibration","Usure roulement"]
+const causes=[
+"Surchauffe moteur",
+"Vibration anormale",
+"Usure roulement"
+]
 
 const actions={
-"Surchauffe moteur":["Vérifier ventilation","Inspection thermique"],
-"Vibration":["Contrôle alignement","Inspection mécanique"],
-"Usure roulement":["Lubrification","Remplacement roulement"]
+"Surchauffe moteur":["Réduire cadence","Vérifier ventilation"],
+"Vibration anormale":["Inspection mécanique","Contrôle alignement"],
+"Usure roulement":["Lubrification","Planifier remplacement"]
 }
 
-let machine=machines[Math.floor(Math.random()*machines.length)]
-let cause=causes[Math.floor(Math.random()*causes.length)]
+let m=machines[Math.floor(Math.random()*machines.length)]
+let c=causes[Math.floor(Math.random()*causes.length)]
 
-document.getElementById("machineRisk").innerText="Machine à risque : "+machine
-document.getElementById("cause").innerText="Cause probable : "+cause
+document.getElementById("aiMachine").innerText="Machine à risque : "+m
+document.getElementById("aiCause").innerText="Cause probable : "+c
 
-let list=document.getElementById("action")
+let list=document.getElementById("aiAction")
 list.innerHTML=""
 
-actions[cause].forEach(a=>{
-list.innerHTML+="<li>"+a+"</li>"
-})
+actions[c].forEach(a=>list.innerHTML+="<li>"+a+"</li>")
 
 }
 
@@ -344,14 +323,13 @@ for(let i=1;i<=12;i++){
 let row="<tr>"
 
 row+="<td>Mois "+i+"</td>"
-row+="<td>"+random(70,95)+"%</td>"
-row+="<td>"+random(85,100)+"%</td>"
-row+="<td>"+random(80,95)+"%</td>"
-row+="<td>"+random(94,100)+"%</td>"
+row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
+row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
+row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
 
 row+="</tr>"
 
-document.getElementById("dataTable").innerHTML+=row
+document.getElementById("tableData").innerHTML+=row
 
 }
 
@@ -359,31 +337,19 @@ document.getElementById("dataTable").innerHTML+=row
 
 window.onload=function(){
 
-updateKPIs()
-updateLines()
-updateMachines()
-predictiveAI()
 generateTable()
 
 new QRCode(document.getElementById("qrcode"),{
 text:window.location.href,
-width:120,
-height:120
+width:110,
+height:110
 })
 
 new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
-labels:["Arrêts","Micro-arrêts","Vitesse","Réglage"],
+labels:["Arrêts","Micro","Vitesse","Réglage"],
 datasets:[{data:[30,20,15,10]}]
-}
-})
-
-new Chart(document.getElementById("shift"),{
-type:"bar",
-data:{
-labels:["Jour","Soir","Nuit"],
-datasets:[{data:[88,81,76]}]
 }
 })
 
@@ -391,9 +357,12 @@ new Chart(document.getElementById("history"),{
 type:"line",
 data:{
 labels:["Jan","Fev","Mar","Avr","Mai"],
-datasets:[{data:[80,82,84,85,87]}]
+datasets:[{data:[80,82,85,87,89]}]
 }
 })
+
+setInterval(simulateFactory,2000)
+setInterval(predictiveAI,8000)
 
 }
 
