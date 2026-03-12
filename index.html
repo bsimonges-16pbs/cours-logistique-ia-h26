@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle industriel TRS V22</title>
+<title>Centre de contrôle industriel TRS V23 PRO</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -58,9 +58,9 @@ border-radius:10px;
 text-align:center;
 }
 
-.legend{
-margin-bottom:20px;
-}
+.legend{margin-bottom:20px}
+
+.legend span{margin-right:15px;font-weight:bold}
 
 .red{color:red}
 .orange{color:orange}
@@ -138,6 +138,8 @@ cursor:pointer;
 <div>
 
 <select>
+
+<option>Version V23.0</option>
 <option>Version V22.0</option>
 <option>Version V21.0</option>
 <option>Version V20.0</option>
@@ -154,6 +156,7 @@ cursor:pointer;
 <option>Version V9.0</option>
 <option>Version V8.0</option>
 <option>Version V7.0</option>
+
 </select>
 
 <select>
@@ -177,9 +180,9 @@ cursor:pointer;
 </div>
 
 <div class="legend">
-<span class="red">TRS < 70%</span>
-<span class="orange">70-85%</span>
-<span class="green">> 85%</span>
+
+<span class="red">TRS < 70%</span> <span class="orange">70-85%</span> <span class="green">> 85%</span>
+
 </div>
 
 <div class="grid">
@@ -259,23 +262,114 @@ const months=[
 "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
 ]
 
+let production=[0,0,0,0]
+
+function simulateFactory(){
+
+let total=0
+let failure=false
+
+production.forEach((v,i)=>{
+
+let machine=document.getElementById("m"+(i+1))
+
+let r=Math.random()
+
+machine.classList.remove("ok","warn","fail")
+
+if(r<0.7){
+
+machine.classList.add("ok")
+production[i]+=Math.floor(Math.random()*5)
+
+}
+
+else if(r<0.9){
+
+machine.classList.add("warn")
+production[i]+=1
+
+}
+
+else{
+
+machine.classList.add("fail")
+failure=true
+
+}
+
+document.getElementById("p"+(i+1)).innerText=production[i]
+
+total+=production[i]
+
+})
+
+document.getElementById("production").innerText=total
+
+let availability=(Math.random()*10+90)
+let performance=(Math.random()*10+85)
+let quality=(Math.random()*5+94)
+
+let trs=(availability*performance*quality)/10000
+
+document.getElementById("availability").innerText=availability.toFixed(1)+"%"
+document.getElementById("performance").innerText=performance.toFixed(1)+"%"
+document.getElementById("quality").innerText=quality.toFixed(1)+"%"
+document.getElementById("trs").innerText=trs.toFixed(1)+"%"
+
+predictiveAI()
+
+if(failure){
+
+document.getElementById("alertBox").style.display="block"
+
+}else{
+
+document.getElementById("alertBox").style.display="none"
+
+}
+
+}
+
+function predictiveAI(){
+
+const machines=["Machine A","Machine B","Machine C","Machine D"]
+
+const causes=["Surchauffe moteur","Vibration anormale","Usure roulement"]
+
+const actions={
+"Surchauffe moteur":["Réduire cadence","Vérifier ventilation"],
+"Vibration anormale":["Inspection mécanique","Contrôle alignement"],
+"Usure roulement":["Lubrification","Planifier remplacement"]
+}
+
+let m=machines[Math.floor(Math.random()*machines.length)]
+let c=causes[Math.floor(Math.random()*causes.length)]
+
+document.getElementById("aiMachine").innerText="Machine à risque : "+m
+document.getElementById("aiCause").innerText="Cause probable : "+c
+
+let list=document.getElementById("aiAction")
+list.innerHTML=""
+
+actions[c].forEach(a=>list.innerHTML+="<li>"+a+"</li>")
+
+}
+
 function generateTable(){
 
 let tbody=document.querySelector("#dataTable tbody")
 
 months.forEach((m,i)=>{
 
-let trs=(80+i/2).toFixed(1)
-let dispo=(90+i/3).toFixed(1)
-let perf=(85+i/4).toFixed(1)
-let qual=(95+i/5).toFixed(1)
-
 let row="<tr>"
+
 row+="<td>"+m+"</td>"
-row+="<td>"+trs+"%</td>"
-row+="<td>"+dispo+"%</td>"
-row+="<td>"+perf+"%</td>"
-row+="<td>"+qual+"%</td>"
+row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
+row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
+row+="<td>"+(85+i/4).toFixed(1)+"%</td>"
+row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
+
 row+="</tr>"
 
 tbody.innerHTML+=row
@@ -300,11 +394,13 @@ rows.forEach(r=>table.appendChild(r))
 function exportCSV(){
 
 let table=document.getElementById("dataTable")
+
 let csv=[]
 
 for(let row of table.rows){
 
 let cols=row.querySelectorAll("td,th")
+
 let data=[]
 
 cols.forEach(c=>data.push(c.innerText))
@@ -314,10 +410,13 @@ csv.push(data.join(","))
 }
 
 let blob=new Blob([csv.join("\n")],{type:"text/csv"})
+
 let link=document.createElement("a")
 
 link.href=URL.createObjectURL(blob)
+
 link.download="trs_mensuel.csv"
+
 link.click()
 
 }
@@ -325,7 +424,9 @@ link.click()
 function exportExcel(){
 
 let table=document.getElementById("dataTable")
+
 let wb=XLSX.utils.table_to_book(table)
+
 XLSX.writeFile(wb,"trs_mensuel.xlsx")
 
 }
@@ -334,26 +435,16 @@ window.onload=function(){
 
 generateTable()
 
+setInterval(simulateFactory,2000)
+
 new QRCode(document.getElementById("qrcode"),{
 text:window.location.href,
 width:110,
 height:110
 })
 
-new Chart(document.getElementById("history"),{
-type:"line",
+new Chart(document.getElementById("pareto"),{
+type:"bar",
 data:{
-labels:months,
-datasets:[{
-label:"TRS mensuel (%)",
-data:[80,82,83,85,86,87,88,89,90,91,92,93]
-}]
-}
-})
-
-}
-
-</script>
-
-</body>
-</html>
+labels:["Arrêts","Micro-arrêts","Vitesse réduite","Réglages"],
+datasets:[{label:"Pertes production (%)",data:[32,18,]()]()
