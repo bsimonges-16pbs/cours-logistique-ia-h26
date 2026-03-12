@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle industriel TRS V17.0</title>
+<title>Centre de contrôle industriel TRS V18</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -25,7 +25,7 @@ h1{text-align:center}
 display:flex;
 justify-content:space-between;
 flex-wrap:wrap;
-margin-bottom:30px;
+margin-bottom:20px;
 }
 
 button{
@@ -82,14 +82,15 @@ text-align:center;
 .warn{background:#ea580c}
 .fail{background:#dc2626}
 
-.chart{
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-margin-top:30px;
+.alert{
+background:#dc2626;
+padding:10px;
+margin-top:20px;
+border-radius:6px;
+display:none;
 }
 
-.aiBox{
+.chart{
 background:#1e293b;
 padding:20px;
 border-radius:10px;
@@ -106,6 +107,7 @@ margin-top:30px;
 th,td{
 padding:8px;
 border-bottom:1px solid #334155;
+cursor:pointer;
 }
 
 </style>
@@ -120,13 +122,19 @@ border-bottom:1px solid #334155;
 
 <div>
 
-<select id="versionSelect" onchange="changeVersion()">
+<select id="mode">
 
-<option value="17">Version V17.0</option>
-<option value="16">Version V16.0</option>
-<option value="15">Version V15.0</option>
-<option value="14">Version V14.0</option>
-<option value="13">Version V13.0</option>
+<option value="directeur">Mode Directeur</option>
+<option value="operateur">Mode Opérateur</option>
+
+</select>
+
+<select id="timeFilter">
+
+<option value="jour">Jour</option>
+<option value="semaine">Semaine</option>
+<option value="mois">Mois</option>
+<option value="annee">Année</option>
 
 </select>
 
@@ -161,7 +169,13 @@ Production
 
 </div>
 
-<h2>Machines production</h2>
+<div class="alert" id="alertBox">
+
+⚠ ALERTE : panne machine détectée — intervention maintenance requise
+
+</div>
+
+<h2>Machines</h2>
 
 <div class="machineGrid">
 
@@ -172,33 +186,16 @@ Production
 
 </div>
 
-<div class="aiBox">
-
-<h3>IA maintenance prédictive</h3>
-
-<p id="aiMachine"></p>
-<p id="aiCause"></p>
-
-<ul id="aiAction"></ul>
-
-</div>
-
 <div class="chart">
-
 <canvas id="pareto"></canvas>
-
 </div>
 
 <div class="chart">
-
 <canvas id="shift"></canvas>
-
 </div>
 
 <div class="chart">
-
 <canvas id="history"></canvas>
-
 </div>
 
 <table id="dataTable">
@@ -206,10 +203,11 @@ Production
 <thead>
 
 <tr>
-<th>Mois</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Qualité</th>
+
+<th onclick="sortTable(1)">TRS</th>
+<th onclick="sortTable(2)">Disponibilité</th>
+<th onclick="sortTable(3)">Qualité</th>
+
 </tr>
 
 </thead>
@@ -225,6 +223,7 @@ let production=[0,0,0,0]
 function simulateFactory(){
 
 let total=0
+let failure=false
 
 production.forEach((v,i)=>{
 
@@ -250,6 +249,7 @@ production[i]+=1
 else{
 
 machine.classList.add("fail")
+failure=true
 
 }
 
@@ -265,31 +265,51 @@ let trs=(Math.random()*20+75).toFixed(1)
 
 document.getElementById("trs").innerText=trs+"%"
 
-}
+if(failure){
 
-function predictiveAI(){
+document.getElementById("alertBox").style.display="block"
 
-const machines=["Machine A","Machine B","Machine C","Machine D"]
+}else{
 
-const causes=[
-"Surchauffe moteur",
-"Vibration anormale",
-"Usure roulement"
-]
-
-let m=machines[Math.floor(Math.random()*machines.length)]
-let c=causes[Math.floor(Math.random()*causes.length)]
-
-document.getElementById("aiMachine").innerText="Machine à risque : "+m
-document.getElementById("aiCause").innerText="Cause probable : "+c
+document.getElementById("alertBox").style.display="none"
 
 }
 
-function changeVersion(){
+}
 
-let v=document.getElementById("versionSelect").value
+function generateTable(){
 
-alert("Affichage simulation version V"+v)
+let tbody=document.querySelector("#dataTable tbody")
+
+for(let i=1;i<=12;i++){
+
+let row="<tr>"
+
+row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
+row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
+row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
+
+row+="</tr>"
+
+tbody.innerHTML+=row
+
+}
+
+}
+
+function sortTable(n){
+
+let table=document.getElementById("dataTable")
+
+let rows=[...table.rows].slice(1)
+
+rows.sort((a,b)=>{
+
+return parseFloat(b.cells[n].innerText)-parseFloat(a.cells[n].innerText)
+
+})
+
+rows.forEach(r=>table.appendChild(r))
 
 }
 
@@ -333,27 +353,6 @@ XLSX.writeFile(wb,"production_trs.xlsx")
 
 }
 
-function generateTable(){
-
-let tbody=document.querySelector("#dataTable tbody")
-
-for(let i=1;i<=12;i++){
-
-let row="<tr>"
-
-row+="<td>Mois "+i+"</td>"
-row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
-row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
-row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
-
-row+="</tr>"
-
-tbody.innerHTML+=row
-
-}
-
-}
-
 window.onload=function(){
 
 generateTable()
@@ -368,7 +367,7 @@ new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
 labels:["Arrêts","Micro","Vitesse","Réglage"],
-datasets:[{label:"Pareto des pertes",data:[30,20,15,10]}]
+datasets:[{label:"Pareto pertes",data:[30,20,15,10]}]
 }
 })
 
@@ -389,7 +388,6 @@ datasets:[{label:"Historique TRS",data:[80,82,85,87,89]}]
 })
 
 setInterval(simulateFactory,2000)
-setInterval(predictiveAI,8000)
 
 }
 
