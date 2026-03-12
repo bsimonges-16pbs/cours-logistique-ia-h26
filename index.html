@@ -4,14 +4,15 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard Industriel TRS - V15.0</title>
+<title>Centre de contrôle industriel – TRS</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
 
 body{
-font-family:Arial;
+font-family:Segoe UI;
 background:#0f172a;
 color:white;
 margin:30px;
@@ -19,10 +20,10 @@ margin:30px;
 
 h1{
 text-align:center;
-margin-bottom:30px;
+margin-bottom:25px;
 }
 
-.header{
+.topbar{
 display:flex;
 justify-content:space-between;
 flex-wrap:wrap;
@@ -34,9 +35,15 @@ padding:10px 15px;
 border:none;
 background:#2563eb;
 color:white;
-border-radius:5px;
+border-radius:6px;
 cursor:pointer;
 margin:5px;
+}
+
+select{
+padding:8px;
+border-radius:5px;
+margin-right:10px;
 }
 
 .grid{
@@ -52,6 +59,19 @@ padding:20px;
 border-radius:10px;
 text-align:center;
 }
+
+.legend{
+margin-bottom:25px;
+}
+
+.legend span{
+margin-right:20px;
+font-weight:bold;
+}
+
+.red{color:red}
+.orange{color:orange}
+.green{color:lime}
 
 .lineGrid{
 display:grid;
@@ -94,29 +114,28 @@ border-radius:10px;
 margin-bottom:30px;
 }
 
+table{
+width:100%;
+border-collapse:collapse;
+background:#1e293b;
+}
+
+th,td{
+padding:8px;
+border-bottom:1px solid #334155;
+text-align:center;
+}
+
 .factory{
 display:grid;
 grid-template-columns:repeat(2,200px);
 gap:20px;
-margin-bottom:30px;
-}
-
-.factoryMachine{
-background:#1e293b;
-padding:30px;
-text-align:center;
-border-radius:10px;
-cursor:pointer;
-font-weight:bold;
+margin-top:20px;
 }
 
 .machineOK{background:#15803d}
 .machineWarn{background:#ea580c}
 .machineFail{background:#dc2626}
-
-.low{color:lime}
-.medium{color:orange}
-.high{color:red}
 
 </style>
 
@@ -126,13 +145,37 @@ font-weight:bold;
 
 <h1>Centre de contrôle industriel – TRS</h1>
 
-<div class="header">
+<div class="topbar">
 
 <div>
-<b>Version V15.0</b><br><br>
+
+<select>
+<option>Version V15.0</option>
+<option>Version V14.0</option>
+<option>Version V13.0</option>
+</select>
+
+<select id="timeFilter">
+<option>Jour</option>
+<option>Semaine</option>
+<option>Mois</option>
+<option>Année</option>
+</select>
+
 <button onclick="exportCSV()">Export CSV</button>
 <button onclick="exportExcel()">Export Excel</button>
+
 </div>
+
+<div id="qrcode"></div>
+
+</div>
+
+<div class="legend">
+
+<span class="red">TRS < 70%</span>
+<span class="orange">TRS 70-85%</span>
+<span class="green">TRS > 85%</span>
 
 </div>
 
@@ -163,42 +206,44 @@ font-weight:bold;
 <h2>TRS par ligne</h2>
 
 <div class="lineGrid">
-<div class="line">Ligne 1 : <span id="l1">--</span></div>
-<div class="line">Ligne 2 : <span id="l2">--</span></div>
-<div class="line">Ligne 3 : <span id="l3">--</span></div>
-<div class="line">Ligne 4 : <span id="l4">--</span></div>
+
+<div class="line">Ligne 1 : <span id="l1"></span></div>
+<div class="line">Ligne 2 : <span id="l2"></span></div>
+<div class="line">Ligne 3 : <span id="l3"></span></div>
+<div class="line">Ligne 4 : <span id="l4"></span></div>
+
 </div>
 
 <h2>TRS machines temps réel</h2>
 
 <div class="machineGrid">
-<div class="machine">Machine A <br><span id="m1">--</span></div>
-<div class="machine">Machine B <br><span id="m2">--</span></div>
-<div class="machine">Machine C <br><span id="m3">--</span></div>
-<div class="machine">Machine D <br><span id="m4">--</span></div>
+
+<div class="machine">Machine A <br><span id="m1"></span></div>
+<div class="machine">Machine B <br><span id="m2"></span></div>
+<div class="machine">Machine C <br><span id="m3"></span></div>
+<div class="machine">Machine D <br><span id="m4"></span></div>
+
 </div>
 
 <h2>IA Maintenance prédictive</h2>
 
 <div class="aiBox">
 
-<p id="iaMachine"></p>
-<p id="iaRisk"></p>
-<p id="iaCause"></p>
+<p id="machineRisk"></p>
+<p id="cause"></p>
 
-<b>Conduite à tenir :</b>
-<ul id="iaAction"></ul>
+<ul id="action"></ul>
 
 </div>
 
-<h2>Plan d'usine interactif</h2>
+<h2>Plan usine</h2>
 
 <div class="factory">
 
-<div class="factoryMachine" id="fa">Machine A</div>
-<div class="factoryMachine" id="fb">Machine B</div>
-<div class="factoryMachine" id="fc">Machine C</div>
-<div class="factoryMachine" id="fd">Machine D</div>
+<div class="card" id="fa">Machine A</div>
+<div class="card" id="fb">Machine B</div>
+<div class="card" id="fc">Machine C</div>
+<div class="card" id="fd">Machine D</div>
 
 </div>
 
@@ -214,50 +259,45 @@ font-weight:bold;
 <canvas id="history"></canvas>
 </div>
 
+<h2>Données production</h2>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Mois</th>
+<th>TRS</th>
+<th>Disponibilité</th>
+<th>Performance</th>
+<th>Qualité</th>
+</tr>
+
+</thead>
+
+<tbody id="dataTable"></tbody>
+
+</table>
+
 <script>
 
 function random(min,max){
 return (Math.random()*(max-min)+min).toFixed(1)
 }
 
-function trsColor(value,element){
-
-value=parseFloat(value)
-
-if(value<70) element.style.color="red"
-else if(value<85) element.style.color="orange"
-else element.style.color="lime"
-
-}
-
 function updateKPIs(){
 
-let trs=random(70,95)
-let disp=random(85,100)
-let perf=random(80,95)
-let qual=random(94,100)
-
-let el=document.getElementById("trs")
-
-el.innerText=trs+"%"
-trsColor(trs,el)
-
-document.getElementById("disp").innerText=disp+"%"
-document.getElementById("perf").innerText=perf+"%"
-document.getElementById("qual").innerText=qual+"%"
+document.getElementById("trs").innerText=random(70,95)+"%"
+document.getElementById("disp").innerText=random(85,100)+"%"
+document.getElementById("perf").innerText=random(80,95)+"%"
+document.getElementById("qual").innerText=random(94,100)+"%"
 
 }
 
 function updateLines(){
 
 ["l1","l2","l3","l4"].forEach(id=>{
-
-let val=random(70,95)
-let el=document.getElementById(id)
-
-el.innerText=val+"%"
-trsColor(val,el)
-
+document.getElementById(id).innerText=random(70,95)+"%"
 })
 
 }
@@ -265,51 +305,30 @@ trsColor(val,el)
 function updateMachines(){
 
 ["m1","m2","m3","m4"].forEach(id=>{
-
-let val=random(70,95)
-let el=document.getElementById(id)
-
-el.innerText=val+"%"
-trsColor(val,el)
-
+document.getElementById(id).innerText=random(70,95)+"%"
 })
 
 }
-
-setInterval(updateMachines,4000)
 
 function predictiveAI(){
 
 const machines=["Machine A","Machine B","Machine C","Machine D"]
 
-const causes=[
-"Surchauffe moteur",
-"Vibration anormale",
-"Usure roulement",
-"Capteur défaillant"
-]
+const causes=["Surchauffe moteur","Vibration","Usure roulement"]
 
 const actions={
 "Surchauffe moteur":["Vérifier ventilation","Inspection thermique"],
-"Vibration anormale":["Contrôler alignement","Inspection mécanique"],
-"Usure roulement":["Lubrification","Planifier remplacement"],
-"Capteur défaillant":["Calibration","Remplacement capteur"]
+"Vibration":["Contrôle alignement","Inspection mécanique"],
+"Usure roulement":["Lubrification","Remplacement roulement"]
 }
 
 let machine=machines[Math.floor(Math.random()*machines.length)]
 let cause=causes[Math.floor(Math.random()*causes.length)]
-let risk=Math.floor(Math.random()*100)
 
-let level="low"
+document.getElementById("machineRisk").innerText="Machine à risque : "+machine
+document.getElementById("cause").innerText="Cause probable : "+cause
 
-if(risk>70) level="high"
-else if(risk>40) level="medium"
-
-document.getElementById("iaMachine").innerHTML="<b>"+machine+"</b>"
-document.getElementById("iaRisk").innerHTML="Probabilité panne : <span class='"+level+"'>"+risk+"%</span>"
-document.getElementById("iaCause").innerHTML="Cause probable : "+cause
-
-let list=document.getElementById("iaAction")
+let list=document.getElementById("action")
 list.innerHTML=""
 
 actions[cause].forEach(a=>{
@@ -318,21 +337,23 @@ list.innerHTML+="<li>"+a+"</li>"
 
 }
 
-function updateFactory(){
+function generateTable(){
 
-["fa","fb","fc","fd"].forEach(id=>{
+for(let i=1;i<=12;i++){
 
-let r=Math.random()
+let row="<tr>"
 
-let el=document.getElementById(id)
+row+="<td>Mois "+i+"</td>"
+row+="<td>"+random(70,95)+"%</td>"
+row+="<td>"+random(85,100)+"%</td>"
+row+="<td>"+random(80,95)+"%</td>"
+row+="<td>"+random(94,100)+"%</td>"
 
-el.classList.remove("machineOK","machineWarn","machineFail")
+row+="</tr>"
 
-if(r<0.6) el.classList.add("machineOK")
-else if(r<0.85) el.classList.add("machineWarn")
-else el.classList.add("machineFail")
+document.getElementById("dataTable").innerHTML+=row
 
-})
+}
 
 }
 
@@ -342,12 +363,18 @@ updateKPIs()
 updateLines()
 updateMachines()
 predictiveAI()
-updateFactory()
+generateTable()
+
+new QRCode(document.getElementById("qrcode"),{
+text:window.location.href,
+width:120,
+height:120
+})
 
 new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
-labels:["Arrêts","Micro arrêts","Vitesse","Réglage"],
+labels:["Arrêts","Micro-arrêts","Vitesse","Réglage"],
 datasets:[{data:[30,20,15,10]}]
 }
 })
