@@ -4,7 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle industriel TRS V18</title>
+<title>Centre de contrôle industriel TRS V19</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -122,19 +122,24 @@ cursor:pointer;
 
 <div>
 
-<select id="mode">
+<select>
 
-<option value="directeur">Mode Directeur</option>
-<option value="operateur">Mode Opérateur</option>
+<option>Version V19.0</option>
+<option>Version V18.0</option>
+<option>Version V17.0</option>
+<option>Version V16.0</option>
+<option>Version V15.0</option>
+<option>Version V14.0</option>
+<option>Version V13.0</option>
 
 </select>
 
-<select id="timeFilter">
+<select>
 
-<option value="jour">Jour</option>
-<option value="semaine">Semaine</option>
-<option value="mois">Mois</option>
-<option value="annee">Année</option>
+<option>Jour</option>
+<option>Semaine</option>
+<option>Mois</option>
+<option>Année</option>
 
 </select>
 
@@ -163,6 +168,21 @@ TRS
 </div>
 
 <div class="card">
+<h2 id="availability">--</h2>
+Disponibilité
+</div>
+
+<div class="card">
+<h2 id="performance">--</h2>
+Performance
+</div>
+
+<div class="card">
+<h2 id="quality">--</h2>
+Qualité
+</div>
+
+<div class="card">
 <h2 id="production">0</h2>
 Production
 </div>
@@ -171,11 +191,11 @@ Production
 
 <div class="alert" id="alertBox">
 
-⚠ ALERTE : panne machine détectée — intervention maintenance requise
+⚠ ALERTE : panne machine détectée
 
 </div>
 
-<h2>Machines</h2>
+<h2>Machines production</h2>
 
 <div class="machineGrid">
 
@@ -187,15 +207,21 @@ Production
 </div>
 
 <div class="chart">
+
 <canvas id="pareto"></canvas>
+
 </div>
 
 <div class="chart">
+
 <canvas id="shift"></canvas>
+
 </div>
 
 <div class="chart">
+
 <canvas id="history"></canvas>
+
 </div>
 
 <table id="dataTable">
@@ -204,8 +230,9 @@ Production
 
 <tr>
 
-<th onclick="sortTable(1)">TRS</th>
-<th onclick="sortTable(2)">Disponibilité</th>
+<th onclick="sortTable(0)">TRS</th>
+<th onclick="sortTable(1)">Disponibilité</th>
+<th onclick="sortTable(2)">Performance</th>
 <th onclick="sortTable(3)">Qualité</th>
 
 </tr>
@@ -261,9 +288,16 @@ total+=production[i]
 
 document.getElementById("production").innerText=total
 
-let trs=(Math.random()*20+75).toFixed(1)
+let availability=(Math.random()*10+90)
+let performance=(Math.random()*10+85)
+let quality=(Math.random()*5+94)
 
-document.getElementById("trs").innerText=trs+"%"
+let trs=(availability*performance*quality)/10000
+
+document.getElementById("availability").innerText=availability.toFixed(1)+"%"
+document.getElementById("performance").innerText=performance.toFixed(1)+"%"
+document.getElementById("quality").innerText=quality.toFixed(1)+"%"
+document.getElementById("trs").innerText=trs.toFixed(1)+"%"
 
 if(failure){
 
@@ -287,6 +321,7 @@ let row="<tr>"
 
 row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
 row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
+row+="<td>"+(85+i/4).toFixed(1)+"%</td>"
 row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
 
 row+="</tr>"
@@ -367,7 +402,7 @@ new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
 labels:["Arrêts","Micro","Vitesse","Réglage"],
-datasets:[{label:"Pareto pertes",data:[30,20,15,10]}]
+datasets:[{label:"Pareto des pertes",data:[30,20,15,10]}]
 }
 })
 
