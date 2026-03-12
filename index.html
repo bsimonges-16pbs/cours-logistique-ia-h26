@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 
 <html lang="fr">
-
 <head>
 
 <meta charset="UTF-8">
@@ -24,13 +23,6 @@ margin:30px;
 
 h1{text-align:center}
 
-.topbar{
-display:flex;
-justify-content:space-between;
-flex-wrap:wrap;
-margin-bottom:20px;
-}
-
 button{
 padding:10px 15px;
 background:#2563eb;
@@ -43,6 +35,13 @@ cursor:pointer;
 select{
 padding:8px;
 margin-right:10px;
+}
+
+.topbar{
+display:flex;
+justify-content:space-between;
+flex-wrap:wrap;
+margin-bottom:20px;
 }
 
 .grid{
@@ -61,11 +60,6 @@ text-align:center;
 
 .legend{
 margin-bottom:20px;
-}
-
-.legend span{
-margin-right:15px;
-font-weight:bold;
 }
 
 .red{color:red}
@@ -144,7 +138,6 @@ cursor:pointer;
 <div>
 
 <select>
-
 <option>Version V22.0</option>
 <option>Version V21.0</option>
 <option>Version V20.0</option>
@@ -155,23 +148,24 @@ cursor:pointer;
 <option>Version V15.0</option>
 <option>Version V14.0</option>
 <option>Version V13.0</option>
-
+<option>Version V12.0</option>
+<option>Version V11.0</option>
+<option>Version V10.0</option>
+<option>Version V9.0</option>
+<option>Version V8.0</option>
+<option>Version V7.0</option>
 </select>
 
 <select>
-
 <option>Jour</option>
 <option>Semaine</option>
 <option>Mois</option>
 <option>Année</option>
-
 </select>
 
 <select>
-
 <option>Mode Directeur</option>
 <option>Mode Opérateur</option>
-
 </select>
 
 <button onclick="exportCSV()">Export CSV</button> <button onclick="exportExcel()">Export Excel</button>
@@ -183,45 +177,22 @@ cursor:pointer;
 </div>
 
 <div class="legend">
-
-<span class="red">TRS < 70%</span> <span class="orange">70-85%</span> <span class="green">> 85%</span>
-
+<span class="red">TRS < 70%</span>
+<span class="orange">70-85%</span>
+<span class="green">> 85%</span>
 </div>
 
 <div class="grid">
 
-<div class="card">
-<h2 id="trs">--</h2>
-TRS
-</div>
-
-<div class="card">
-<h2 id="availability">--</h2>
-Disponibilité
-</div>
-
-<div class="card">
-<h2 id="performance">--</h2>
-Performance
-</div>
-
-<div class="card">
-<h2 id="quality">--</h2>
-Qualité
-</div>
-
-<div class="card">
-<h2 id="production">0</h2>
-Production
-</div>
+<div class="card"><h2 id="trs">--</h2>TRS</div>
+<div class="card"><h2 id="availability">--</h2>Disponibilité</div>
+<div class="card"><h2 id="performance">--</h2>Performance</div>
+<div class="card"><h2 id="quality">--</h2>Qualité</div>
+<div class="card"><h2 id="production">0</h2>Production</div>
 
 </div>
 
-<div class="alert" id="alertBox">
-
-⚠ panne machine détectée
-
-</div>
+<div class="alert" id="alertBox">⚠ panne machine détectée</div>
 
 <h2>Plan d'usine interactif</h2>
 
@@ -249,24 +220,18 @@ Production
 </div>
 
 <div class="chart">
-
 <h3>Pareto des pertes</h3>
 <canvas id="pareto"></canvas>
-
 </div>
 
 <div class="chart">
-
 <h3>TRS par quart</h3>
 <canvas id="shift"></canvas>
-
 </div>
 
 <div class="chart">
-
 <h3>Historique TRS annuel</h3>
 <canvas id="history"></canvas>
-
 </div>
 
 <table id="dataTable">
@@ -274,10 +239,11 @@ Production
 <thead>
 
 <tr>
-<th onclick="sortTable(0)">TRS</th>
-<th onclick="sortTable(1)">Disponibilité</th>
-<th onclick="sortTable(2)">Performance</th>
-<th onclick="sortTable(3)">Qualité</th>
+<th onclick="sortTable(0)">Mois</th>
+<th onclick="sortTable(1)">TRS</th>
+<th onclick="sortTable(2)">Disponibilité</th>
+<th onclick="sortTable(3)">Performance</th>
+<th onclick="sortTable(4)">Qualité</th>
 </tr>
 
 </thead>
@@ -288,118 +254,33 @@ Production
 
 <script>
 
-let production=[0,0,0,0]
-
-function simulateFactory(){
-
-let total=0
-let failure=false
-
-production.forEach((v,i)=>{
-
-let machine=document.getElementById("m"+(i+1))
-
-let r=Math.random()
-
-machine.classList.remove("ok","warn","fail")
-
-if(r<0.7){
-
-machine.classList.add("ok")
-production[i]+=Math.floor(Math.random()*5)
-
-}
-
-else if(r<0.9){
-
-machine.classList.add("warn")
-production[i]+=1
-
-}
-
-else{
-
-machine.classList.add("fail")
-failure=true
-
-}
-
-document.getElementById("p"+(i+1)).innerText=production[i]
-
-total+=production[i]
-
-})
-
-document.getElementById("production").innerText=total
-
-let availability=(Math.random()*10+90)
-let performance=(Math.random()*10+85)
-let quality=(Math.random()*5+94)
-
-let trs=(availability*performance*quality)/10000
-
-document.getElementById("availability").innerText=availability.toFixed(1)+"%"
-document.getElementById("performance").innerText=performance.toFixed(1)+"%"
-document.getElementById("quality").innerText=quality.toFixed(1)+"%"
-document.getElementById("trs").innerText=trs.toFixed(1)+"%"
-
-predictiveAI()
-
-if(failure){
-
-document.getElementById("alertBox").style.display="block"
-
-}else{
-
-document.getElementById("alertBox").style.display="none"
-
-}
-
-}
-
-function predictiveAI(){
-
-const machines=["Machine A","Machine B","Machine C","Machine D"]
-
-const causes=["Surchauffe moteur","Vibration anormale","Usure roulement"]
-
-const actions={
-"Surchauffe moteur":["Réduire cadence","Vérifier ventilation"],
-"Vibration anormale":["Inspection mécanique","Contrôle alignement"],
-"Usure roulement":["Lubrification","Planifier remplacement"]
-}
-
-let m=machines[Math.floor(Math.random()*machines.length)]
-let c=causes[Math.floor(Math.random()*causes.length)]
-
-document.getElementById("aiMachine").innerText="Machine à risque : "+m
-document.getElementById("aiCause").innerText="Cause probable : "+c
-
-let list=document.getElementById("aiAction")
-list.innerHTML=""
-
-actions[c].forEach(a=>list.innerHTML+="<li>"+a+"</li>")
-
-}
+const months=[
+"Janvier","Février","Mars","Avril","Mai","Juin",
+"Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+]
 
 function generateTable(){
 
 let tbody=document.querySelector("#dataTable tbody")
 
-for(let i=1;i<=12;i++){
+months.forEach((m,i)=>{
+
+let trs=(80+i/2).toFixed(1)
+let dispo=(90+i/3).toFixed(1)
+let perf=(85+i/4).toFixed(1)
+let qual=(95+i/5).toFixed(1)
 
 let row="<tr>"
-
-row+="<td>"+(80+i/2).toFixed(1)+"%</td>"
-row+="<td>"+(90+i/3).toFixed(1)+"%</td>"
-row+="<td>"+(85+i/4).toFixed(1)+"%</td>"
-row+="<td>"+(95+i/5).toFixed(1)+"%</td>"
-
+row+="<td>"+m+"</td>"
+row+="<td>"+trs+"%</td>"
+row+="<td>"+dispo+"%</td>"
+row+="<td>"+perf+"%</td>"
+row+="<td>"+qual+"%</td>"
 row+="</tr>"
 
 tbody.innerHTML+=row
 
-}
+})
 
 }
 
@@ -409,7 +290,7 @@ let table=document.getElementById("dataTable")
 let rows=[...table.rows].slice(1)
 
 rows.sort((a,b)=>{
-return parseFloat(b.cells[n].innerText)-parseFloat(a.cells[n].innerText)
+return a.cells[n].innerText.localeCompare(b.cells[n].innerText)
 })
 
 rows.forEach(r=>table.appendChild(r))
@@ -419,29 +300,24 @@ rows.forEach(r=>table.appendChild(r))
 function exportCSV(){
 
 let table=document.getElementById("dataTable")
-
 let csv=[]
 
 for(let row of table.rows){
 
 let cols=row.querySelectorAll("td,th")
+let data=[]
 
-let rowData=[]
+cols.forEach(c=>data.push(c.innerText))
 
-cols.forEach(c=>rowData.push(c.innerText))
-
-csv.push(rowData.join(","))
+csv.push(data.join(","))
 
 }
 
 let blob=new Blob([csv.join("\n")],{type:"text/csv"})
-
 let link=document.createElement("a")
 
 link.href=URL.createObjectURL(blob)
-
-link.download="production_trs.csv"
-
+link.download="trs_mensuel.csv"
 link.click()
 
 }
@@ -449,10 +325,8 @@ link.click()
 function exportExcel(){
 
 let table=document.getElementById("dataTable")
-
 let wb=XLSX.utils.table_to_book(table)
-
-XLSX.writeFile(wb,"production_trs.xlsx")
+XLSX.writeFile(wb,"trs_mensuel.xlsx")
 
 }
 
@@ -466,31 +340,16 @@ width:110,
 height:110
 })
 
-new Chart(document.getElementById("pareto"),{
-type:"bar",
-data:{
-labels:["Arrêts","Micro-arrêts","Vitesse réduite","Réglages"],
-datasets:[{label:"Pertes production (%)",data:[32,18,15,10]}]
-}
-})
-
-new Chart(document.getElementById("shift"),{
-type:"bar",
-data:{
-labels:["Quart Jour","Quart Soir","Quart Nuit"],
-datasets:[{label:"TRS (%)",data:[88,82,76]}]
-}
-})
-
 new Chart(document.getElementById("history"),{
 type:"line",
 data:{
-labels:["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Août","Sep","Oct","Nov","Déc"],
-datasets:[{label:"TRS mensuel (%)",data:[80,82,83,85,86,87,88,89,90,91,92,93]}]
+labels:months,
+datasets:[{
+label:"TRS mensuel (%)",
+data:[80,82,83,85,86,87,88,89,90,91,92,93]
+}]
 }
 })
-
-setInterval(simulateFactory,2000)
 
 }
 
