@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 
 <head>
@@ -9,26 +8,35 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-
 <style>
 
 body{
-font-family:Segoe UI;
+font-family:Arial;
 background:#0f172a;
 color:white;
 margin:30px;
 }
 
-h1{text-align:center}
+h1{
+text-align:center;
+margin-bottom:30px;
+}
 
 .header{
 display:flex;
 justify-content:space-between;
 flex-wrap:wrap;
-margin-bottom:20px;
+margin-bottom:30px;
+}
+
+button{
+padding:10px 15px;
+border:none;
+background:#2563eb;
+color:white;
+border-radius:5px;
+cursor:pointer;
+margin:5px;
 }
 
 .grid{
@@ -79,40 +87,12 @@ border-radius:10px;
 margin-bottom:25px;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-background:#1e293b;
-}
-
-th,td{
-padding:8px;
-border-bottom:1px solid #334155;
-text-align:center;
-}
-
-button{
-padding:10px 15px;
-border:none;
-background:#2563eb;
-color:white;
-border-radius:5px;
-cursor:pointer;
-margin:5px;
-}
-
 .aiBox{
 background:#1e293b;
 padding:20px;
 border-radius:10px;
 margin-bottom:30px;
 }
-
-.alertLow{color:lime}
-.alertMedium{color:orange}
-.alertHigh{color:red}
-
-/* PLAN USINE */
 
 .factory{
 display:grid;
@@ -134,6 +114,10 @@ font-weight:bold;
 .machineWarn{background:#ea580c}
 .machineFail{background:#dc2626}
 
+.low{color:lime}
+.medium{color:orange}
+.high{color:red}
+
 </style>
 
 </head>
@@ -145,35 +129,32 @@ font-weight:bold;
 <div class="header">
 
 <div>
-<b>Version V15.0</b>
-<br><br>
+<b>Version V15.0</b><br><br>
 <button onclick="exportCSV()">Export CSV</button>
 <button onclick="exportExcel()">Export Excel</button>
 </div>
-
-<div id="qrcode"></div>
 
 </div>
 
 <div class="grid">
 
 <div class="card">
-<h2 id="trs"></h2>
+<h2 id="trs">--</h2>
 <p>TRS</p>
 </div>
 
 <div class="card">
-<h2 id="disp"></h2>
+<h2 id="disp">--</h2>
 <p>Disponibilité</p>
 </div>
 
 <div class="card">
-<h2 id="perf"></h2>
+<h2 id="perf">--</h2>
 <p>Performance</p>
 </div>
 
 <div class="card">
-<h2 id="qual"></h2>
+<h2 id="qual">--</h2>
 <p>Qualité</p>
 </div>
 
@@ -182,19 +163,19 @@ font-weight:bold;
 <h2>TRS par ligne</h2>
 
 <div class="lineGrid">
-<div class="line">Ligne 1 : <span id="l1"></span></div>
-<div class="line">Ligne 2 : <span id="l2"></span></div>
-<div class="line">Ligne 3 : <span id="l3"></span></div>
-<div class="line">Ligne 4 : <span id="l4"></span></div>
+<div class="line">Ligne 1 : <span id="l1">--</span></div>
+<div class="line">Ligne 2 : <span id="l2">--</span></div>
+<div class="line">Ligne 3 : <span id="l3">--</span></div>
+<div class="line">Ligne 4 : <span id="l4">--</span></div>
 </div>
 
 <h2>TRS machines temps réel</h2>
 
 <div class="machineGrid">
-<div class="machine">Machine A <br><span id="m1"></span></div>
-<div class="machine">Machine B <br><span id="m2"></span></div>
-<div class="machine">Machine C <br><span id="m3"></span></div>
-<div class="machine">Machine D <br><span id="m4"></span></div>
+<div class="machine">Machine A <br><span id="m1">--</span></div>
+<div class="machine">Machine B <br><span id="m2">--</span></div>
+<div class="machine">Machine C <br><span id="m3">--</span></div>
+<div class="machine">Machine D <br><span id="m4">--</span></div>
 </div>
 
 <h2>IA Maintenance prédictive</h2>
@@ -206,7 +187,6 @@ font-weight:bold;
 <p id="iaCause"></p>
 
 <b>Conduite à tenir :</b>
-
 <ul id="iaAction"></ul>
 
 </div>
@@ -222,65 +202,23 @@ font-weight:bold;
 
 </div>
 
-<div class="aiBox">
-
-<h3>Diagnostic machine</h3>
-
-<p id="diagMachine"></p>
-<p id="diagCause"></p>
-
-<ul id="diagAction"></ul>
-
-</div>
-
 <div class="chart">
-<h3>Pareto pertes</h3>
 <canvas id="pareto"></canvas>
 </div>
 
 <div class="chart">
-<h3>Analyse par quart</h3>
 <canvas id="shift"></canvas>
 </div>
 
 <div class="chart">
-<h3>Historique TRS</h3>
 <canvas id="history"></canvas>
 </div>
 
-<h2>Données production</h2>
-
-<table>
-
-<thead>
-<tr>
-<th>Mois</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Performance</th>
-<th>Qualité</th>
-</tr>
-</thead>
-
-<tbody id="dataTable"></tbody>
-
-</table>
-
 <script>
-
-/* QR CODE */
-
-new QRCode(document.getElementById("qrcode"),{
-text:"https://bsimonges-16pbs.github.io/cours-logistique-ia-h26/",
-width:120,
-height:120
-})
 
 function random(min,max){
 return (Math.random()*(max-min)+min).toFixed(1)
 }
-
-/* COULEUR TRS */
 
 function trsColor(value,element){
 
@@ -292,8 +230,6 @@ else element.style.color="lime"
 
 }
 
-/* KPI */
-
 function updateKPIs(){
 
 let trs=random(70,95)
@@ -301,10 +237,10 @@ let disp=random(85,100)
 let perf=random(80,95)
 let qual=random(94,100)
 
-let trsEl=document.getElementById("trs")
+let el=document.getElementById("trs")
 
-trsEl.innerText=trs+"%"
-trsColor(trs,trsEl)
+el.innerText=trs+"%"
+trsColor(trs,el)
 
 document.getElementById("disp").innerText=disp+"%"
 document.getElementById("perf").innerText=perf+"%"
@@ -312,16 +248,11 @@ document.getElementById("qual").innerText=qual+"%"
 
 }
 
-updateKPIs()
-
-/* LIGNES */
-
 function updateLines(){
 
 ["l1","l2","l3","l4"].forEach(id=>{
 
 let val=random(70,95)
-
 let el=document.getElementById(id)
 
 el.innerText=val+"%"
@@ -331,16 +262,11 @@ trsColor(val,el)
 
 }
 
-updateLines()
-
-/* MACHINES */
-
 function updateMachines(){
 
 ["m1","m2","m3","m4"].forEach(id=>{
 
 let val=random(70,95)
-
 let el=document.getElementById(id)
 
 el.innerText=val+"%"
@@ -352,29 +278,77 @@ trsColor(val,el)
 
 setInterval(updateMachines,4000)
 
-/* TABLEAU */
+function predictiveAI(){
 
-for(let i=1;i<=12;i++){
+const machines=["Machine A","Machine B","Machine C","Machine D"]
 
-let row=`<tr>
-<td>Mois ${i}</td>
-<td>${random(70,95)}%</td>
-<td>${random(85,100)}%</td>
-<td>${random(80,95)}%</td>
-<td>${random(94,100)}%</td>
-</tr>`
+const causes=[
+"Surchauffe moteur",
+"Vibration anormale",
+"Usure roulement",
+"Capteur défaillant"
+]
 
-document.getElementById("dataTable").innerHTML+=row
+const actions={
+"Surchauffe moteur":["Vérifier ventilation","Inspection thermique"],
+"Vibration anormale":["Contrôler alignement","Inspection mécanique"],
+"Usure roulement":["Lubrification","Planifier remplacement"],
+"Capteur défaillant":["Calibration","Remplacement capteur"]
+}
+
+let machine=machines[Math.floor(Math.random()*machines.length)]
+let cause=causes[Math.floor(Math.random()*causes.length)]
+let risk=Math.floor(Math.random()*100)
+
+let level="low"
+
+if(risk>70) level="high"
+else if(risk>40) level="medium"
+
+document.getElementById("iaMachine").innerHTML="<b>"+machine+"</b>"
+document.getElementById("iaRisk").innerHTML="Probabilité panne : <span class='"+level+"'>"+risk+"%</span>"
+document.getElementById("iaCause").innerHTML="Cause probable : "+cause
+
+let list=document.getElementById("iaAction")
+list.innerHTML=""
+
+actions[cause].forEach(a=>{
+list.innerHTML+="<li>"+a+"</li>"
+})
 
 }
 
-/* GRAPHIQUES */
+function updateFactory(){
+
+["fa","fb","fc","fd"].forEach(id=>{
+
+let r=Math.random()
+
+let el=document.getElementById(id)
+
+el.classList.remove("machineOK","machineWarn","machineFail")
+
+if(r<0.6) el.classList.add("machineOK")
+else if(r<0.85) el.classList.add("machineWarn")
+else el.classList.add("machineFail")
+
+})
+
+}
+
+window.onload=function(){
+
+updateKPIs()
+updateLines()
+updateMachines()
+predictiveAI()
+updateFactory()
 
 new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
-labels:["Arrêts","Micro","Vitesse","Réglage","Qualité"],
-datasets:[{data:[30,20,18,15,10]}]
+labels:["Arrêts","Micro arrêts","Vitesse","Réglage"],
+datasets:[{data:[30,20,15,10]}]
 }
 })
 
@@ -389,128 +363,12 @@ datasets:[{data:[88,81,76]}]
 new Chart(document.getElementById("history"),{
 type:"line",
 data:{
-labels:["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"],
-datasets:[{label:"2025",data:[80,82,84,85,86,87,88,89,90,91,92,93]}]
+labels:["Jan","Fev","Mar","Avr","Mai"],
+datasets:[{data:[80,82,84,85,87]}]
 }
 })
 
-/* IA MAINTENANCE */
-
-const machines=["Machine A","Machine B","Machine C","Machine D"]
-
-const causes=[
-"Surchauffe moteur",
-"Vibration anormale",
-"Usure roulement",
-"Capteur défaillant",
-"Perte pression hydraulique"
-]
-
-const actions={
-
-"Surchauffe moteur":["Réduire cadence","Vérifier ventilation","Inspection thermique"],
-"Vibration anormale":["Contrôler alignement","Inspection mécanique","Vérifier fixation"],
-"Usure roulement":["Lubrification","Inspection roulement","Planifier remplacement"],
-"Capteur défaillant":["Calibration","Diagnostic système","Remplacement capteur"],
-"Perte pression hydraulique":["Inspection circuit","Contrôle pompe","Vérifier fuite"]
-
 }
-
-function predictiveAI(){
-
-let machine=machines[Math.floor(Math.random()*machines.length)]
-let risk=Math.floor(Math.random()*100)
-let cause=causes[Math.floor(Math.random()*causes.length)]
-
-let riskLevel="Faible"
-let classColor="alertLow"
-
-if(risk>70){
-riskLevel="Critique"
-classColor="alertHigh"
-}
-
-else if(risk>40){
-riskLevel="Moyen"
-classColor="alertMedium"
-}
-
-document.getElementById("iaMachine").innerHTML="Machine à risque : <b>"+machine+"</b>"
-
-document.getElementById("iaRisk").innerHTML="Probabilité panne : <span class='"+classColor+"'>"+risk+" % ("+riskLevel+")</span>"
-
-document.getElementById("iaCause").innerHTML="Cause probable : "+cause
-
-let list=document.getElementById("iaAction")
-
-list.innerHTML=""
-
-actions[cause].forEach(a=>{
-list.innerHTML+="<li>"+a+"</li>"
-})
-
-}
-
-predictiveAI()
-
-setInterval(predictiveAI,8000)
-
-/* PLAN USINE */
-
-const factoryMachines=["fa","fb","fc","fd"]
-
-function updateFactory(){
-
-factoryMachines.forEach(id=>{
-
-let state=Math.random()
-
-let el=document.getElementById(id)
-
-el.classList.remove("machineOK","machineWarn","machineFail")
-
-if(state<0.6)
-el.classList.add("machineOK")
-
-else if(state<0.85)
-el.classList.add("machineWarn")
-
-else
-el.classList.add("machineFail")
-
-})
-
-}
-
-updateFactory()
-
-setInterval(updateFactory,6000)
-
-/* CLIC MACHINE */
-
-factoryMachines.forEach(id=>{
-
-document.getElementById(id).onclick=function(){
-
-let machine=this.innerText
-
-let cause=causes[Math.floor(Math.random()*causes.length)]
-
-document.getElementById("diagMachine").innerText="Machine : "+machine
-
-document.getElementById("diagCause").innerText="Cause probable : "+cause
-
-let list=document.getElementById("diagAction")
-
-list.innerHTML=""
-
-actions[cause].forEach(a=>{
-list.innerHTML+="<li>"+a+"</li>"
-})
-
-}
-
-})
 
 function exportCSV(){alert("Export CSV")}
 function exportExcel(){alert("Export Excel")}
