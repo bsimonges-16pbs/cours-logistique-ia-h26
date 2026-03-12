@@ -5,7 +5,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Dashboard Industriel TRS - V12.0</title>
+<title>Dashboard Industriel TRS - V14.0</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -13,24 +13,11 @@
 
 <style>
 
-:root{
---bg:#0f172a;
---card:#1e293b;
---text:white;
-}
-
-.light{
---bg:#f1f5f9;
---card:white;
---text:#111;
-}
-
 body{
 font-family:Segoe UI;
-background:var(--bg);
-color:var(--text);
+background:#0f172a;
+color:white;
 margin:30px;
-transition:0.3s;
 }
 
 h1{text-align:center}
@@ -38,12 +25,9 @@ h1{text-align:center}
 .header{
 display:flex;
 justify-content:space-between;
-align-items:center;
-margin-bottom:20px;
 flex-wrap:wrap;
+margin-bottom:20px;
 }
-
-.versionPanel{text-align:right}
 
 .grid{
 display:grid;
@@ -53,23 +37,17 @@ margin-bottom:25px;
 }
 
 .card{
-background:var(--card);
+background:#1e293b;
 padding:20px;
 border-radius:10px;
 text-align:center;
 }
 
-.factory{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
+.chart{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
 margin-bottom:25px;
-}
-
-.line{
-background:var(--card);
-padding:15px;
-border-radius:8px;
 }
 
 .machineGrid{
@@ -80,23 +58,29 @@ margin-bottom:25px;
 }
 
 .machine{
-background:var(--card);
+background:#1e293b;
 padding:15px;
 border-radius:8px;
 text-align:center;
 }
 
-.chart{
-background:var(--card);
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
+.lineGrid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:15px;
+margin-bottom:25px;
+}
+
+.line{
+background:#1e293b;
+padding:15px;
+border-radius:8px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-background:var(--card);
+background:#1e293b;
 }
 
 th,td{
@@ -115,15 +99,15 @@ cursor:pointer;
 margin:5px;
 }
 
-.filters{
-margin-bottom:20px;
-}
+.alertLow{color:lime}
+.alertMedium{color:orange}
+.alertHigh{color:red}
 
 .aiBox{
-background:var(--card);
-padding:15px;
-border-radius:8px;
-margin-bottom:20px;
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+margin-bottom:25px;
 }
 
 </style>
@@ -136,60 +120,18 @@ margin-bottom:20px;
 
 <div class="header">
 
-<div class="versionPanel">
+<div>
 
-<b>Version 12.0</b><br>
-<span id="dateUpdate"></span>
-
-<br><br>
-
-Historique versions :
-
-<select>
-<option>V12.0</option>
-<option>V11.0</option>
-<option>V10.0</option>
-<option>V9.0</option>
-</select>
+Version : <b>V14.0</b>
 
 <br><br>
 
-<button onclick="toggleTheme()">Light / Dark</button>
+<button onclick="exportCSV()">Export CSV</button>
+<button onclick="exportExcel()">Export Excel</button>
 
 </div>
 
 <div id="qrcode"></div>
-
-</div>
-
-<div class="filters">
-
-Filtre année
-
-<select>
-<option>2025</option>
-<option>2024</option>
-<option>2023</option>
-</select>
-
-Filtre mois
-
-<select>
-<option>Tous</option>
-<option>Janvier</option>
-<option>Février</option>
-<option>Mars</option>
-</select>
-
-Filtre ligne
-
-<select>
-<option>Toutes</option>
-<option>Ligne 1</option>
-<option>Ligne 2</option>
-<option>Ligne 3</option>
-<option>Ligne 4</option>
-</select>
 
 </div>
 
@@ -217,21 +159,14 @@ Filtre ligne
 
 </div>
 
-<div class="aiBox">
+<h2>TRS par ligne</h2>
 
-<b>IA Maintenance prédictive</b><br>
-Risque panne machine : <span id="risk"></span>
+<div class="lineGrid">
 
-</div>
-
-<h2>Plan interactif usine</h2>
-
-<div class="factory">
-
-<div class="line">Ligne 1 TRS: <span id="l1"></span></div>
-<div class="line">Ligne 2 TRS: <span id="l2"></span></div>
-<div class="line">Ligne 3 TRS: <span id="l3"></span></div>
-<div class="line">Ligne 4 TRS: <span id="l4"></span></div>
+<div class="line">Ligne 1 : <span id="l1"></span></div>
+<div class="line">Ligne 2 : <span id="l2"></span></div>
+<div class="line">Ligne 3 : <span id="l3"></span></div>
+<div class="line">Ligne 4 : <span id="l4"></span></div>
 
 </div>
 
@@ -240,194 +175,5 @@ Risque panne machine : <span id="risk"></span>
 <div class="machineGrid">
 
 <div class="machine">Machine A <br><span id="m1"></span></div>
-<div class="machine">Machine B <br><span id="m2"></span></div>
-<div class="machine">Machine C <br><span id="m3"></span></div>
-<div class="machine">Machine D <br><span id="m4"></span></div>
-
-</div>
-
-<div class="chart">
-<h3>Pareto pertes</h3>
-<canvas id="pareto"></canvas>
-</div>
-
-<div class="chart">
-<h3>Analyse par quart</h3>
-<canvas id="shift"></canvas>
-</div>
-
-<div class="chart">
-<h3>Historique TRS multi-années</h3>
-<canvas id="history"></canvas>
-</div>
-
-<h2>Données production</h2>
-
-<button onclick="exportCSV()">Export CSV</button>
-<button onclick="exportExcel()">Export Excel</button>
-
-<table>
-
-<thead>
-<tr>
-<th>Date</th>
-<th>TRS</th>
-<th>Disponibilité</th>
-<th>Performance</th>
-<th>Qualité</th>
-</tr>
-</thead>
-
-<tbody id="tableData"></tbody>
-
-</table>
-
-<script>
-
-document.getElementById("dateUpdate").innerText=new Date().toLocaleDateString("fr-CA")
-
-const githubLink="https://bsimonges-16pbs.github.io/cours-logistique-ia-h26/"
-
-new QRCode(document.getElementById("qrcode"),{
-text:githubLink,
-width:120,
-height:120
-})
-
-function random(min,max){
-return (Math.random()*(max-min)+min).toFixed(1)
-}
-
-/* KPI */
-
-function updateKPIs(){
-
-document.getElementById("trs").innerText=random(75,95)+"%"
-document.getElementById("disp").innerText=random(85,100)+"%"
-document.getElementById("perf").innerText=random(80,95)+"%"
-document.getElementById("qual").innerText=random(94,100)+"%"
-
-}
-
-updateKPIs()
-
-/* lignes */
-
-function updateLines(){
-
-document.getElementById("l1").innerText=random(70,95)+"%"
-document.getElementById("l2").innerText=random(70,95)+"%"
-document.getElementById("l3").innerText=random(70,95)+"%"
-document.getElementById("l4").innerText=random(70,95)+"%"
-
-}
-
-updateLines()
-
-/* machines */
-
-function updateMachines(){
-
-document.getElementById("m1").innerText=random(70,95)+"%"
-document.getElementById("m2").innerText=random(70,95)+"%"
-document.getElementById("m3").innerText=random(70,95)+"%"
-document.getElementById("m4").innerText=random(70,95)+"%"
-
-}
-
-setInterval(updateMachines,4000)
-
-updateMachines()
-
-/* IA maintenance */
-
-function updateRisk(){
-
-let r=Math.random()
-
-let level="Faible"
-
-if(r>0.7) level="Élevé"
-else if(r>0.4) level="Moyen"
-
-document.getElementById("risk").innerText=level
-
-}
-
-setInterval(updateRisk,6000)
-
-updateRisk()
-
-/* graphiques */
-
-new Chart(document.getElementById("pareto"),{
-
-type:"bar",
-
-data:{
-labels:["Arrêts","Micro-arrêts","Vitesse","Réglage","Qualité"],
-datasets:[{data:[30,22,18,15,10]}]
-},
-
-options:{animation:true}
-
-})
-
-new Chart(document.getElementById("shift"),{
-
-type:"bar",
-
-data:{
-labels:["Jour","Soir","Nuit"],
-datasets:[{data:[88,81,76]}]
-}
-
-})
-
-new Chart(document.getElementById("history"),{
-
-type:"line",
-
-data:{
-labels:["Jan","Fev","Mar","Avr","Mai","Jun","Jul","Aou","Sep","Oct","Nov","Dec"],
-datasets:[
-{label:"2023",data:[75,78,80,79,82,83,84,85,86,87,88,89]},
-{label:"2024",data:[78,80,82,83,84,86,87,88,89,90,91,92]},
-{label:"2025",data:[80,82,84,86,87,88,89,90,91,92,93,94]}
-]
-}
-
-})
-
-/* table */
-
-for(let i=1;i<=12;i++){
-
-let row=`<tr>
-<td>Mois ${i}</td>
-<td>${random(75,95)}%</td>
-<td>${random(85,100)}%</td>
-<td>${random(80,95)}%</td>
-<td>${random(94,100)}%</td>
-</tr>`
-
-document.getElementById("tableData").innerHTML+=row
-
-}
-
-/* export */
-
-function exportCSV(){alert("Export CSV")}
-function exportExcel(){alert("Export Excel")}
-
-/* theme */
-
-function toggleTheme(){
-document.body.classList.toggle("light")
-}
-
-</script>
-
-</body>
-</html>
+<div class="machine">Machine B <br><span id="
 ```
