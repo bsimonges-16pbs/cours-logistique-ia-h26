@@ -1,13 +1,16 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 
 <head>
 
 <meta charset="UTF-8">
-<title>Centre de contrôle industriel TRS V19</title>
+<title>Centre de contrôle industriel TRS V20</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
 <style>
@@ -37,11 +40,6 @@ border-radius:6px;
 cursor:pointer;
 }
 
-select{
-padding:8px;
-border-radius:5px;
-}
-
 .grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
@@ -56,38 +54,29 @@ border-radius:10px;
 text-align:center;
 }
 
-.legend span{
-margin-right:15px;
-font-weight:bold;
-}
+.factory{
 
-.red{color:red}
-.orange{color:orange}
-.green{color:lime}
-
-.machineGrid{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:20px;
+grid-template-columns:repeat(4,1fr);
+gap:30px;
+align-items:center;
+margin-top:40px;
 }
 
 .machine{
 padding:20px;
 border-radius:10px;
-background:#1e293b;
 text-align:center;
+font-weight:bold;
 }
 
 .ok{background:#15803d}
 .warn{background:#ea580c}
 .fail{background:#dc2626}
 
-.alert{
-background:#dc2626;
-padding:10px;
-margin-top:20px;
-border-radius:6px;
-display:none;
+.arrow{
+text-align:center;
+font-size:28px;
 }
 
 .chart{
@@ -110,53 +99,31 @@ border-bottom:1px solid #334155;
 cursor:pointer;
 }
 
+.alert{
+background:#dc2626;
+padding:10px;
+margin-top:20px;
+border-radius:6px;
+display:none;
+}
+
 </style>
 
 </head>
 
 <body>
 
-<h1>Centre de contrôle industriel – TRS</h1>
+<h1>Centre de contrôle industriel – TRS V20</h1>
 
 <div class="topbar">
 
 <div>
 
-<select>
-
-<option>Version V19.0</option>
-<option>Version V18.0</option>
-<option>Version V17.0</option>
-<option>Version V16.0</option>
-<option>Version V15.0</option>
-<option>Version V14.0</option>
-<option>Version V13.0</option>
-
-</select>
-
-<select>
-
-<option>Jour</option>
-<option>Semaine</option>
-<option>Mois</option>
-<option>Année</option>
-
-</select>
-
-<button onclick="exportCSV()">Export CSV</button>
-<button onclick="exportExcel()">Export Excel</button>
+<button onclick="exportCSV()">Export CSV</button> <button onclick="exportExcel()">Export Excel</button>
 
 </div>
 
 <div id="qrcode"></div>
-
-</div>
-
-<div class="legend">
-
-<span class="red">TRS < 70%</span>
-<span class="orange">70-85%</span>
-<span class="green">> 85%</span>
 
 </div>
 
@@ -191,35 +158,47 @@ Production
 
 <div class="alert" id="alertBox">
 
-⚠ ALERTE : panne machine détectée
+⚠ panne machine détectée
 
 </div>
 
-<h2>Machines production</h2>
+<h2>Plan d'usine interactif</h2>
 
-<div class="machineGrid">
+<div class="factory">
 
 <div class="machine" id="m1">Machine A<br><span id="p1">0</span></div>
+
+<div class="arrow">➡</div>
+
 <div class="machine" id="m2">Machine B<br><span id="p2">0</span></div>
+
+<div class="arrow">➡</div>
+
 <div class="machine" id="m3">Machine C<br><span id="p3">0</span></div>
+
+<div class="arrow">➡</div>
+
 <div class="machine" id="m4">Machine D<br><span id="p4">0</span></div>
 
 </div>
 
 <div class="chart">
 
+<h3>Pareto des pertes</h3>
 <canvas id="pareto"></canvas>
 
 </div>
 
 <div class="chart">
 
+<h3>TRS par quart</h3>
 <canvas id="shift"></canvas>
 
 </div>
 
 <div class="chart">
 
+<h3>Historique TRS</h3>
 <canvas id="history"></canvas>
 
 </div>
@@ -255,6 +234,7 @@ let failure=false
 production.forEach((v,i)=>{
 
 let machine=document.getElementById("m"+(i+1))
+
 let r=Math.random()
 
 machine.classList.remove("ok","warn","fail")
@@ -402,7 +382,7 @@ new Chart(document.getElementById("pareto"),{
 type:"bar",
 data:{
 labels:["Arrêts","Micro","Vitesse","Réglage"],
-datasets:[{label:"Pareto des pertes",data:[30,20,15,10]}]
+datasets:[{label:"Pertes production",data:[30,20,15,10]}]
 }
 })
 
