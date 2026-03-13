@@ -1,1 +1,0 @@
-# cours-logistique-ia-h26
